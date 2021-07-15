@@ -531,6 +531,8 @@
                 result([FlutterError errorWithCode:[@"Track is class of " stringByAppendingString:[[track class] description]] message:nil details:nil]);
             }
         }
+    } else if ([@"mediaStreamChangeFocus" isEqualToString:call.method]){
+        [self mediaStreamChangeFocus:result];
     } else if ([@"setVolume" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];
