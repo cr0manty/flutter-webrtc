@@ -189,6 +189,11 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       case "getSources":
         getSources(result);
         break;
+      case "mediaStreamChangeZoom":
+        String cameraTrackID = call.argument("trackId");
+        double zoom = call.argument("zoom");
+        getUserMediaImpl.changeZoom(cameraTrackID, zoom, result);
+        break;
       case "createOffer": {
         String peerConnectionId = call.argument("peerConnectionId");
         Map<String, Object> constraints = call.argument("constraints");
@@ -292,8 +297,8 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       }
       case "getStats": {
         String peerConnectionId = call.argument("peerConnectionId");
-        String trackId = call.argument("trackId");
-        peerConnectionGetStats(trackId, peerConnectionId, result);
+        String cameraTrackId = call.argument("trackId");
+        peerConnectionGetStats(cameraTrackId, peerConnectionId, result);
         break;
       }
       case "createDataChannel": {
@@ -338,39 +343,39 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         break;
       }
       case "mediaStreamTrackSetEnable": {
-        String trackId = call.argument("trackId");
+        String cameraTrackId = call.argument("trackId");
         Boolean enabled = call.argument("enabled");
-        mediaStreamTrackSetEnabled(trackId, enabled);
+        mediaStreamTrackSetEnabled(cameraTrackId, enabled);
         result.success(null);
         break;
       }
       case "mediaStreamAddTrack": {
         String streamId = call.argument("streamId");
-        String trackId = call.argument("trackId");
-        mediaStreamAddTrack(streamId, trackId, result);
+        String cameraTrackId = call.argument("trackId");
+        mediaStreamAddTrack(streamId, cameraTrackId, result);
         for (int i = 0; i < renders.size(); i++) {
           FlutterRTCVideoRenderer renderer = renders.get(i);
           if (renderer.checkMediaStream(streamId)) {
-            renderer.setVideoTrack((VideoTrack) localTracks.get(trackId));
+            renderer.setVideoTrack((VideoTrack) localTracks.get(cameraTrackId));
           }
         }
         break;
       }
       case "mediaStreamRemoveTrack": {
         String streamId = call.argument("streamId");
-        String trackId = call.argument("trackId");
-        mediaStreamRemoveTrack(streamId, trackId, result);
+        String cameraTrackId = call.argument("trackId");
+        mediaStreamRemoveTrack(streamId, cameraTrackId, result);
         for (int i = 0; i < renders.size(); i++) {
           FlutterRTCVideoRenderer renderer = renders.get(i);
-          if (renderer.checkVideoTrack(trackId)) {
+          if (renderer.checkVideoTrack(cameraTrackId)) {
             renderer.setVideoTrack(null);
           }
         }
         break;
       }
       case "trackDispose": {
-        String trackId = call.argument("trackId");
-        localTracks.remove(trackId);
+        String cameraTrackId = call.argument("trackId");
+        localTracks.remove(cameraTrackId);
         result.success(null);
         break;
       }
@@ -438,25 +443,25 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         break;
       }
       case "mediaStreamTrackHasTorch": {
-        String trackId = call.argument("trackId");
-        getUserMediaImpl.hasTorch(trackId, result);
+        String cameraTrackId = call.argument("trackId");
+        getUserMediaImpl.hasTorch(cameraTrackId, result);
         break;
       }
       case "mediaStreamTrackSetTorch": {
-        String trackId = call.argument("trackId");
+        String cameraTrackId = call.argument("trackId");
         boolean torch = call.argument("torch");
-        getUserMediaImpl.setTorch(trackId, torch, result);
+        getUserMediaImpl.setTorch(cameraTrackId, torch, result);
         break;
       }
       case "mediaStreamTrackSwitchCamera": {
-        String trackId = call.argument("trackId");
-        getUserMediaImpl.switchCamera(trackId, result);
+        String cameraTrackId = call.argument("trackId");
+        getUserMediaImpl.switchCamera(cameraTrackId, result);
         break;
       }
       case "setVolume": {
-        String trackId = call.argument("trackId");
+        String cameraTrackId = call.argument("trackId");
         double volume = call.argument("volume");
-        mediaStreamTrackSetVolume(trackId, volume);
+        mediaStreamTrackSetVolume(cameraTrackId, volume);
         result.success(null);
         break;
       }
@@ -570,9 +575,9 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       }
       case "addTrack": {
         String peerConnectionId = call.argument("peerConnectionId");
-        String trackId = call.argument("trackId");
+        String cameraTrackId = call.argument("trackId");
         List<String> streamIds = call.argument("streamIds");
-        addTrack(peerConnectionId, trackId, streamIds, result);
+        addTrack(peerConnectionId, cameraTrackId, streamIds, result);
         break;
       }
       case "removeTrack": {
@@ -585,8 +590,8 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         String peerConnectionId = call.argument("peerConnectionId");
         Map<String, Object> transceiverInit = call.argument("transceiverInit");
         if (call.hasArgument("trackId")) {
-          String trackId = call.argument("trackId");
-          addTransceiver(peerConnectionId, trackId, transceiverInit, result);
+          String cameraTrackId = call.argument("trackId");
+          addTransceiver(peerConnectionId, cameraTrackId, transceiverInit, result);
         } else if (call.hasArgument("mediaType")) {
           String mediaType = call.argument("mediaType");
           addTransceiverOfType(peerConnectionId, mediaType, transceiverInit, result);
@@ -624,15 +629,15 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       case "rtpSenderReplaceTrack": {
         String peerConnectionId = call.argument("peerConnectionId");
         String rtpSenderId = call.argument("rtpSenderId");
-        String trackId = call.argument("trackId");
-        rtpSenderSetTrack(peerConnectionId, rtpSenderId, trackId, true, result);
+        String cameraTrackId = call.argument("trackId");
+        rtpSenderSetTrack(peerConnectionId, rtpSenderId, cameraTrackId, true, result);
         break;
       }
       case "rtpSenderSetTrack": {
         String peerConnectionId = call.argument("peerConnectionId");
         String rtpSenderId = call.argument("rtpSenderId");
-        String trackId = call.argument("trackId");
-        rtpSenderSetTrack(peerConnectionId, rtpSenderId, trackId, false, result);
+        String cameraTrackId = call.argument("trackId");
+        rtpSenderSetTrack(peerConnectionId, rtpSenderId, cameraTrackId, false, result);
         break;
       }
       case "rtpSenderDispose": {

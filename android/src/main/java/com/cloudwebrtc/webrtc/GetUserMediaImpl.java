@@ -8,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.hardware.camera2.CameraAccessException;
@@ -913,6 +914,163 @@ class GetUserMediaImpl {
         }
 
         resultError("hasTorch", "[TORCH] Video capturer not compatible", result);
+    }
+
+    private static final float DEFAULT_ZOOM_FACTOR = 1.0f;
+
+    private final Rect mCropRegion = new Rect();
+
+    public  float maxZoom;
+
+    private  Rect mSensorSize;
+
+    public  boolean hasSupport;
+
+    private void checkZoom(final CameraCharacteristics characteristics)
+    {
+        this.mSensorSize = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+
+        if (this.mSensorSize == null)
+        {
+            this.maxZoom = DEFAULT_ZOOM_FACTOR;
+            this.hasSupport = false;
+            return;
+        }
+
+        final Float value = characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+
+        this.maxZoom = ((value == null) || (value < DEFAULT_ZOOM_FACTOR))
+                ? DEFAULT_ZOOM_FACTOR
+                : value;
+
+        this.hasSupport = (Float.compare(this.maxZoom, DEFAULT_ZOOM_FACTOR) > 0);
+    }
+
+    private void setZoom(CaptureRequest.Builder builder, double zoom)
+    {
+        if (!hasSupport)
+        {
+            return;
+        }
+
+        double newZoom;
+        if (zoom < DEFAULT_ZOOM_FACTOR) {
+            newZoom = DEFAULT_ZOOM_FACTOR;
+        } else if (zoom > this.maxZoom) {
+            newZoom = this.maxZoom;
+        } else {
+            newZoom = zoom;
+        }
+
+        final int centerX = this.mSensorSize.width() / 2;
+        final int centerY = this.mSensorSize.height() / 2;
+        final int deltaX  = (int)((0.5f * this.mSensorSize.width()) / newZoom);
+        final int deltaY  = (int)((0.5f * this.mSensorSize.height()) / newZoom);
+
+        this.mCropRegion.set(centerX - deltaX,
+                centerY - deltaY,
+                centerX + deltaX,
+                centerY + deltaY);
+
+        builder.set(CaptureRequest.SCALER_CROP_REGION, this.mCropRegion);
+    }
+
+    public void changeZoom(String trackId, double zoom, Result result) {
+        VideoCapturerInfo info = mVideoCapturers.get(trackId);
+        if (info == null) {
+            resultError("changeZoom", "Video capturer not found for id: " + trackId, result);
+            return;
+        }
+
+        Log.d("zoom", "zoom started");
+
+
+        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP && info.capturer instanceof Camera2Capturer) {
+            CameraManager manager;
+            CameraDevice cameraDevice;
+            CameraCaptureSession captureSession;
+            Surface surface;
+
+            try {
+                Object session =
+                        getPrivateProperty(
+                                Camera2Capturer.class.getSuperclass(), info.capturer, "currentSession");
+
+                cameraDevice =
+                        (CameraDevice) getPrivateProperty(session.getClass(), session, "cameraDevice");
+
+                manager =
+                        (CameraManager)
+                                getPrivateProperty(Camera2Capturer.class, info.capturer, "cameraManager");
+
+                surface = (Surface) getPrivateProperty(session.getClass(), session, "surface");
+                captureSession =
+                        (CameraCaptureSession)
+                                getPrivateProperty(session.getClass(), session, "captureSession");
+            } catch (NoSuchFieldWithNameException e) {
+                // Most likely the upstream Camera2Capturer class have changed
+                resultError("changeZoom", "[changeZoom] Failed to get `" + e.fieldName + "` from `" + e.className + "`", result);
+                return;
+            }
+
+            boolean zoomChanged = false;
+
+            try {
+                final CaptureRequest.Builder captureRequestBuilder =
+                        cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+                final CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
+
+                checkZoom(characteristics);
+                setZoom(captureRequestBuilder, zoom);
+                try {
+                    captureRequestBuilder.addTarget(surface);
+                    captureSession
+                            .setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                }  catch (NullPointerException ex) {
+                    ex.printStackTrace();
+                }
+                zoomChanged = true;
+            } catch (CameraAccessException e) {
+                // Should never happen since we are already accessing the camera
+                throw new RuntimeException(e);
+            }
+
+            result.success(zoomChanged);
+            return;
+        }
+
+        if (info.capturer instanceof Camera1Capturer) {
+            Camera camera;
+
+            try {
+                Object session =
+                        getPrivateProperty(
+                                Camera1Capturer.class.getSuperclass(), info.capturer, "currentSession");
+                camera = (Camera) getPrivateProperty(session.getClass(), session, "camera");
+            } catch (NoSuchFieldWithNameException e) {
+                // Most likely the upstream Camera1Capturer class have changed
+                resultError("changeZoom", "[changeZoom] Failed to get `" + e.fieldName + "` from `" + e.className + "`", result);
+                return;
+            }
+
+
+            Parameters params = camera.getParameters();
+            if (params.isZoomSupported()) {
+                if (zoom > 1.0) {
+                    params.setZoom((int) zoom * 10);
+                } else {
+                    params.setZoom((int) zoom);
+                }
+                camera.setParameters(params);
+
+                result.success(true);
+            } else {
+                result.success(false);
+            }
+            return;
+        }
+
+        resultError("changeZoom", "[changeZoom] Video capturer not compatible", result);
     }
 
     @RequiresApi(api = VERSION_CODES.LOLLIPOP)

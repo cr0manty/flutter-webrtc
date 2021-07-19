@@ -533,6 +533,11 @@
         }
     } else if ([@"mediaStreamChangeFocus" isEqualToString:call.method]){
         [self mediaStreamChangeFocus:result];
+    } else if ([@"mediaStreamChangeZoom" isEqualToString:call.method]){
+        NSDictionary* argsMap = call.arguments;
+        CGFloat zoom = [[argsMap objectForKey:@"zoom"] floatValue];
+        
+        [self mediaStreamChangeZoom:zoom result:result];
     } else if ([@"setVolume" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];

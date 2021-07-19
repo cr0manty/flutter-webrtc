@@ -44,13 +44,28 @@ class Helper {
     return navigator.mediaDevices.getUserMedia(mediaConstraints);
   }
 
-  static Future<bool> changeFocus() {
+  // trigger focus
+  static Future<bool> changeFocus(MediaStreamTrack track) {
     if (!kIsWeb && !Platform.isAndroid) {
-      return WebRTC.methodChannel()
-          .invokeMethod<bool>(
-            'mediaStreamChangeFocus',
-          )
-          .then((value) => value ?? false);
+      return WebRTC.methodChannel().invokeMethod<bool>(
+        'mediaStreamChangeFocus',
+        <String, dynamic>{'trackId': track.id},
+      ).then((value) => value ?? false);
+    }
+
+    return Future.value(false);
+  }
+
+  // set camera zoom
+  static Future<bool> changeZoom(MediaStreamTrack track, double zoom) {
+    if (!kIsWeb) {
+      return WebRTC.methodChannel().invokeMethod<bool>(
+        'mediaStreamChangeZoom',
+        <String, dynamic>{
+          'zoom': zoom,
+          'trackId': track.id,
+        },
+      ).then((value) => value ?? false);
     }
 
     return Future.value(false);
