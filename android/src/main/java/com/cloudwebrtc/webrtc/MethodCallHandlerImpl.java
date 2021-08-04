@@ -2,6 +2,7 @@ package com.cloudwebrtc.webrtc;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -188,6 +189,12 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         break;
       case "getSources":
         getSources(result);
+        break;
+      case "disableRotation":
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+        break;
+      case "enableRotating":
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         break;
       case "mediaStreamChangeZoom":
         String cameraTrackID = call.argument("trackId");

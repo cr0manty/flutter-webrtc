@@ -240,6 +240,15 @@
                                        message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
                                        details:nil]);
         }
+    } else if ([@"disableRotation" isEqualToString:call.method]) {
+        [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
+        [[NSNotificationCenter defaultCenter] addObserver: self  selector: @selector(orientationChangedHandler:) name: UIDeviceOrientationDidChangeNotification object:nil];
+        result(nil);
+        
+    } else if ([@"enableRotating" isEqualToString:call.method]) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name: UIDeviceOrientationDidChangeNotification object:nil];
+        [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+        result(nil);
     } else if ([@"setRemoteDescription" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSString* peerConnectionId = argsMap[@"peerConnectionId"];
@@ -935,6 +944,11 @@
     } else {
         result(FlutterMethodNotImplemented);
     }
+}
+
+- (void)orientationChangedHandler:(NSNotification *)notification{
+    NSLog(@"orientation changed");
+    [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
 }
 
 - (void)dealloc

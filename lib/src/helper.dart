@@ -71,6 +71,22 @@ class Helper {
     return Future.value(false);
   }
 
+  static Future<void> disableRotation() async {
+    if (!kIsWeb) {
+      await WebRTC.methodChannel().invokeMethod<void>(
+        'disableRotation',
+      );
+    }
+  }
+
+  static Future<void> enableRotating() async {
+    if (!kIsWeb) {
+      await WebRTC.methodChannel().invokeMethod<void>(
+        'enableRotating',
+      );
+    }
+  }
+
   /// For web implementation, make sure to pass the target deviceId
   static Future<bool> switchCamera(MediaStreamTrack track,
       [String? deviceId, MediaStream? stream]) async {
