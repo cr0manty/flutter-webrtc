@@ -9,14 +9,18 @@ import 'utils.dart';
 
 class RTCVideoRendererNative extends VideoRenderer {
   RTCVideoRendererNative();
+
   final _channel = WebRTC.methodChannel();
   int? _textureId;
   MediaStream? _srcObject;
   StreamSubscription<dynamic>? _eventSubscription;
 
   @override
-  Future<void> initialize() async {
-    final response = await WebRTC.invokeMethod('createVideoRenderer', {});
+  Future<void> initialize({
+    bool landscapeMode = false,
+  }) async {
+    final response = await WebRTC.invokeMethod(
+        'createVideoRenderer', {'landscapeMode': landscapeMode});
     _textureId = response['textureId'];
     _eventSubscription = EventChannel('FlutterWebRTC/Texture$textureId')
         .receiveBroadcastStream()

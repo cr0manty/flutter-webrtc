@@ -191,7 +191,12 @@ class RTCVideoRendererWeb extends VideoRenderer {
   }
 
   @override
-  Future<void> initialize() async {
+  Future<void> initialize({
+    bool landscapeMode = false,
+  }) async {
+    if (landscapeMode) {
+      throw UnimplementedError('Landscape not available');
+    }
     var id = 'RTCVideoRenderer-$textureId';
     // // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(id, (int viewId) {

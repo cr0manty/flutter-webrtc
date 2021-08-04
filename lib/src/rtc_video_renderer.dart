@@ -10,7 +10,12 @@ class RTCVideoRenderer {
 
   set onResize(Function func) => _delegate.onResize = func;
 
-  Future<void> initialize() => _delegate.initialize();
+  Future<void> initialize({
+    bool landscapeMode = false,
+  }) =>
+      _delegate.initialize(
+        landscapeMode: landscapeMode,
+      );
 
   int get videoWidth => _delegate.videoWidth;
 

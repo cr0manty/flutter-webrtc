@@ -5,6 +5,7 @@
 #import "FlutterRTCFrameCapturer.h"
 #import "FlutterRTCMediaStream.h"
 #import "FlutterRTCPeerConnection.h"
+#import "FlutterRTCVideoRenderer.h"
 
 #if TARGET_OS_IPHONE
 #import "FlutterRPScreenRecorder.h"

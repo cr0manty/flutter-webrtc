@@ -21,6 +21,10 @@
                          result:(FlutterResult) result;
 
 -(void)mediaStreamTrackSwitchCamera:(RTCMediaStreamTrack *)track
+                             textureId:(NSNumber *)textureId
+                             result:(FlutterResult)result;
+
+-(void)mediaStreamTrackSwitchCamera:(RTCMediaStreamTrack *)track
                              result:(FlutterResult) result;
 
 -(void)mediaStreamChangeFocus:(FlutterResult)result;

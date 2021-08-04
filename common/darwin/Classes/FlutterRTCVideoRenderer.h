@@ -26,6 +26,10 @@
 @interface FlutterWebRTCPlugin (FlutterVideoRendererManager)
 
 - (FlutterRTCVideoRenderer *)createWithTextureRegistry:(id<FlutterTextureRegistry>)registry
+                                             landscapeMode:(BOOL)landscapeMode
+                                             messenger:(NSObject<FlutterBinaryMessenger>*)messenger;
+
+- (FlutterRTCVideoRenderer *)createWithTextureRegistry:(id<FlutterTextureRegistry>)registry
                        messenger:(NSObject<FlutterBinaryMessenger>*)messenger;
 
 -(void)rendererSetSrcObject:(FlutterRTCVideoRenderer*)renderer stream:(RTCVideoTrack*)videoTrack;

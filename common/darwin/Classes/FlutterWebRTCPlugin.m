@@ -458,8 +458,18 @@
         }
         result(nil);
     } else if ([@"createVideoRenderer" isEqualToString:call.method]){
-        FlutterRTCVideoRenderer* render = [self createWithTextureRegistry:_textures
+        NSDictionary* argsMap = call.arguments;
+        FlutterRTCVideoRenderer* render;
+        
+        if ([argsMap objectForKey: @"landscapeMode"]) {
+            BOOL landscapeMode = [argsMap[@"landscapeMode"] boolValue];
+            render = [self createWithTextureRegistry:_textures
+                                       landscapeMode:landscapeMode
                                           messenger:_messenger];
+        } else {
+            render = [self createWithTextureRegistry:_textures
+                                          messenger:_messenger];
+        }
         self.renders[@(render.textureId)] = render;
         result(@{@"textureId": @(render.textureId)});
     } else if ([@"videoRendererDispose" isEqualToString:call.method]){
@@ -948,6 +958,8 @@
 
 - (void)orientationChangedHandler:(NSNotification *)notification{
     NSLog(@"orientation changed");
+    NSNumber *value = [NSNumber numberWithInt:UIInterfaceOrientationLandscapeLeft];
+    [[UIDevice currentDevice] setValue:value forKey:@"orientation"];
     [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
 }
 
