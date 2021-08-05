@@ -190,12 +190,6 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       case "getSources":
         getSources(result);
         break;
-      case "disableRotation":
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
-        break;
-      case "enableRotating":
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-        break;
       case "mediaStreamChangeZoom":
         String cameraTrackID = call.argument("trackId");
         double zoom = call.argument("zoom");

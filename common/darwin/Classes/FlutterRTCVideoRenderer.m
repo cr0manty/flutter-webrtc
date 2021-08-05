@@ -244,7 +244,7 @@
         _renderSize = CGSizeMake(frame.width, frame.height);
     }
 
-    if(frame.rotation != _rotation && !_isLandscapeMode){
+    if(!_isLandscapeMode && frame.rotation != _rotation){
         dispatch_async(dispatch_get_main_queue(), ^{
             FlutterRTCVideoRenderer *strongSelf = weakSelf;
             if(strongSelf.eventSink){
@@ -278,7 +278,7 @@
  * @param size The size of the video frame to render.
  */
 - (void)setSize:(CGSize)size {
-    if (size.width < size.height && _isLandscapeMode) {
+    if (_isLandscapeMode && size.width < size.height) {
         int temp = size.width;
 
         size.width = size.height;
