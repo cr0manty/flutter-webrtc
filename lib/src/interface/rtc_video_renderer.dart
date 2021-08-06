@@ -60,12 +60,12 @@ abstract class VideoRenderer extends ValueNotifier<RTCVideoValue> {
   bool get renderVideo;
   int? get textureId;
 
-  Future<void> initialize({
-    bool landscapeMode = false,
-  });
+  Future<void> initialize();
 
   MediaStream? get srcObject;
   set srcObject(MediaStream? stream);
+
+  Future<void> setLandscapeMode(bool isLandscapeSupported);
 
   @override
   @mustCallSuper

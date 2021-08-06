@@ -449,18 +449,10 @@
         }
         result(nil);
     } else if ([@"createVideoRenderer" isEqualToString:call.method]){
-        NSDictionary* argsMap = call.arguments;
         FlutterRTCVideoRenderer* render;
-        
-        if ([argsMap objectForKey: @"landscapeMode"]) {
-            BOOL landscapeMode = [argsMap[@"landscapeMode"] boolValue];
-            render = [self createWithTextureRegistry:_textures
-                                       landscapeMode:landscapeMode
-                                          messenger:_messenger];
-        } else {
-            render = [self createWithTextureRegistry:_textures
-                                          messenger:_messenger];
-        }
+        render = [self createWithTextureRegistry:_textures
+                                      messenger:_messenger];
+   
         self.renders[@(render.textureId)] = render;
         result(@{@"textureId": @(render.textureId)});
     } else if ([@"videoRendererDispose" isEqualToString:call.method]){
@@ -470,6 +462,14 @@
         render.videoTrack = nil;
         [render dispose];
         [self.renders removeObjectForKey:textureId];
+        result(nil);
+    } else if ([@"setLandscapeMode" isEqualToString:call.method]) {
+        NSDictionary* argsMap = call.arguments;
+        NSNumber *textureId = argsMap[@"textureId"];
+        FlutterRTCVideoRenderer *render = self.renders[textureId];
+        BOOL landscapeMode = [argsMap[@"landscapeMode"] boolValue];
+        
+        [render setLandscapeMode:landscapeMode];
         result(nil);
     } else if ([@"videoRendererSetSrcObject" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;

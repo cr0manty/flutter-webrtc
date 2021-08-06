@@ -191,12 +191,7 @@ class RTCVideoRendererWeb extends VideoRenderer {
   }
 
   @override
-  Future<void> initialize({
-    bool landscapeMode = false,
-  }) async {
-    if (landscapeMode) {
-      throw UnimplementedError('Landscape not available');
-    }
+  Future<void> initialize() async {
     var id = 'RTCVideoRenderer-$textureId';
     // // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(id, (int viewId) {
@@ -254,4 +249,9 @@ class RTCVideoRendererWeb extends VideoRenderer {
       return element;
     });
   }
+
+  /// only for native platforms
+  @override
+  Future<void> setLandscapeMode(bool isLandscapeSupported) =>
+      throw UnimplementedError();
 }

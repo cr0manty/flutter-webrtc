@@ -10,12 +10,7 @@ class RTCVideoRenderer {
 
   set onResize(Function func) => _delegate.onResize = func;
 
-  Future<void> initialize({
-    bool landscapeMode = false,
-  }) =>
-      _delegate.initialize(
-        landscapeMode: landscapeMode,
-      );
+  Future<void> initialize() => _delegate.initialize();
 
   int get videoWidth => _delegate.videoWidth;
 
@@ -32,6 +27,11 @@ class RTCVideoRenderer {
   set audioOutput(String deviceId) => _delegate.audioOutput(deviceId);
 
   set srcObject(MediaStream? stream) => _delegate.srcObject = stream;
+
+  Future<void> setLandscapeMode(bool isLandscapeSupported) =>
+      _delegate.setLandscapeMode(
+        isLandscapeSupported,
+      );
 
   int? get textureId => _delegate.textureId;
 

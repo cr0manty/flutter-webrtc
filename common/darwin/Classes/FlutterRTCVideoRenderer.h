@@ -18,17 +18,14 @@
 - (instancetype)initWithTextureRegistry:(id<FlutterTextureRegistry>)registry
                               messenger:(NSObject<FlutterBinaryMessenger>*)messenger;
 
+- (void)setLandscapeMode:(BOOL)landscapeMode;
+
 - (void)dispose;
 
 @end
 
 
 @interface FlutterWebRTCPlugin (FlutterVideoRendererManager)
-
-- (FlutterRTCVideoRenderer *)createWithTextureRegistry:(id<FlutterTextureRegistry>)registry
-                                             landscapeMode:(BOOL)landscapeMode
-                                             messenger:(NSObject<FlutterBinaryMessenger>*)messenger;
-
 - (FlutterRTCVideoRenderer *)createWithTextureRegistry:(id<FlutterTextureRegistry>)registry
                        messenger:(NSObject<FlutterBinaryMessenger>*)messenger;
 

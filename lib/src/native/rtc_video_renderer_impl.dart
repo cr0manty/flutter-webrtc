@@ -16,15 +16,19 @@ class RTCVideoRendererNative extends VideoRenderer {
   StreamSubscription<dynamic>? _eventSubscription;
 
   @override
-  Future<void> initialize({
-    bool landscapeMode = false,
-  }) async {
+  Future<void> initialize() async {
     final response = await WebRTC.invokeMethod(
-        'createVideoRenderer', {'landscapeMode': landscapeMode});
+      'createVideoRenderer',
+      {},
+    );
+
     _textureId = response['textureId'];
     _eventSubscription = EventChannel('FlutterWebRTC/Texture$textureId')
         .receiveBroadcastStream()
-        .listen(eventListener, onError: errorListener);
+        .listen(
+          eventListener,
+          onError: errorListener,
+        );
   }
 
   @override
@@ -51,7 +55,19 @@ class RTCVideoRendererNative extends VideoRenderer {
     }).then((_) {
       value = (stream == null)
           ? RTCVideoValue.empty
-          : value.copyWith(renderVideo: renderVideo);
+          : value.copyWith(
+              renderVideo: renderVideo,
+            );
+    });
+  }
+
+  @override
+  Future<void> setLandscapeMode(bool isLandscapeSupported) async {
+    if (textureId == null) throw 'Call initialize before setting the stream';
+
+    await _channel.invokeMethod('setLandscapeMode', <String, dynamic>{
+      'textureId': textureId,
+      'landscapeMode': isLandscapeSupported
     });
   }
 

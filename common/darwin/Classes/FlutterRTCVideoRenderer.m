@@ -48,28 +48,21 @@
     return self;
 }
 
-- (instancetype)initWithTextureRegistry:(id<FlutterTextureRegistry>)registry
-                          landscapeMode:(BOOL)landscapeMode
-                          messenger:(NSObject<FlutterBinaryMessenger>*)messenger{
-    self = [super init];
-    if (self){
-        _isFirstFrameRendered = false;
-        _frameSize = CGSizeZero;
-        _renderSize = CGSizeZero;
-        _rotation = -1;
-        _registry = registry;
-        _pixelBufferRef = nil;
-        _eventSink = nil;
-        _rotation  = -1;
-        _textureId  = [registry registerTexture:self];
-        _isLandscapeMode = landscapeMode;
-        /*Create Event Channel.*/
-        _eventChannel = [FlutterEventChannel
-                                       eventChannelWithName:[NSString stringWithFormat:@"FlutterWebRTC/Texture%lld", _textureId]
-                                       binaryMessenger:messenger];
-        [_eventChannel setStreamHandler:self];
-    }
-    return self;
+- (void)setLandscapeMode:(BOOL)landscapeMode {
+    _isLandscapeMode = landscapeMode;
+    __weak FlutterRTCVideoRenderer *weakSelf = self;
+    _rotation = RTCVideoRotation_180;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        FlutterRTCVideoRenderer *strongSelf = weakSelf;
+        if(strongSelf.eventSink){
+            strongSelf.eventSink(@{
+                               @"event" : @"didTextureChangeRotation",
+                               @"id": @(strongSelf.textureId),
+                               @"rotation": @(self->_rotation),
+                               });
+        }
+    });
 }
 
 -(void)dealloc {
@@ -320,15 +313,6 @@
                        messenger:(NSObject<FlutterBinaryMessenger>*)messenger{
     return [[FlutterRTCVideoRenderer alloc] initWithTextureRegistry:registry messenger:messenger];
 }
-
-- (FlutterRTCVideoRenderer *)createWithTextureRegistry:(id<FlutterTextureRegistry>)registry
-                                             landscapeMode:(BOOL)landscapeMode
-                                             messenger:(NSObject<FlutterBinaryMessenger>*)messenger {
-    return [[FlutterRTCVideoRenderer alloc] initWithTextureRegistry:registry
-                                                      landscapeMode: landscapeMode
-                                                      messenger:messenger];
-}
-
 
 -(void)rendererSetSrcObject:(FlutterRTCVideoRenderer*)renderer stream:(RTCVideoTrack*)videoTrack {
     renderer.videoTrack = videoTrack;

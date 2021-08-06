@@ -201,6 +201,9 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         peerConnectionCreateOffer(peerConnectionId, new ConstraintsMap(constraints), result);
         break;
       }
+      case "setLandscapeMode":
+        // no need actions on Android
+        break;
       case "createAnswer": {
         String peerConnectionId = call.argument("peerConnectionId");
         Map<String, Object> constraints = call.argument("constraints");
