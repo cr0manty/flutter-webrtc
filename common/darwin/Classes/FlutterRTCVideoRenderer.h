@@ -20,6 +20,8 @@
 
 - (void)setLandscapeMode:(BOOL)landscapeMode;
 
+- (void)setCameraPosition:(AVCaptureDevicePosition)position;
+
 - (void)dispose;
 
 @end

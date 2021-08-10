@@ -502,6 +502,11 @@
                 NSLog(@"Not found video track for RTCMediaStream: %@", streamId);
             }
         }
+        AVCaptureDevicePosition position = self._usingFrontCamera ?
+            AVCaptureDevicePositionFront :
+            AVCaptureDevicePositionBack
+            ;
+        [render setCameraPosition: position];
         [self rendererSetSrcObject:render stream:videoTrack];
         result(nil);
     } else if ([@"mediaStreamTrackHasTorch" isEqualToString:call.method]) {
@@ -536,6 +541,13 @@
     } else if ([@"mediaStreamTrackSwitchCamera" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];
+        NSNumber *textureId = argsMap[@"textureId"];
+        FlutterRTCVideoRenderer *render = self.renders[textureId];
+        AVCaptureDevicePosition position = self._usingFrontCamera ?
+            AVCaptureDevicePositionBack :
+            AVCaptureDevicePositionFront;
+        [render setCameraPosition: position];
+        
         RTCMediaStreamTrack *track = self.localTracks[trackId];
         if (track != nil && [track isKindOfClass:[RTCVideoTrack class]]) {
             RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;

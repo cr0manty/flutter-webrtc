@@ -74,7 +74,7 @@ abstract class MediaStreamTrack {
 
   /// Throws error if switching camera failed
   @Deprecated('use Helper.switchCamera() instead')
-  Future<bool> switchCamera() {
+  Future<bool> switchCamera(int? textureId) {
     throw UnimplementedError();
   }
 

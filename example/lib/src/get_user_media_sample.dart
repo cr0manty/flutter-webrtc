@@ -21,6 +21,7 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
   bool _inCalling = false;
   bool _isTorchOn = false;
   MediaRecorder? _mediaRecorder;
+
   bool get _isRec => _mediaRecorder != null;
 
   List<MediaDeviceInfo>? _mediaDevicesList;
@@ -140,7 +141,10 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
     final videoTrack = _localStream!
         .getVideoTracks()
         .firstWhere((track) => track.kind == 'video');
-    await Helper.switchCamera(videoTrack);
+    await Helper.switchCamera(
+      videoTrack,
+      textureId: _localRenderer.textureId,
+    );
   }
 
   void _captureFrame() async {

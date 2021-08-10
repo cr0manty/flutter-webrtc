@@ -19,6 +19,7 @@
     FlutterEventChannel* _eventChannel;
     bool _isFirstFrameRendered;
     bool _isLandscapeMode;
+    AVCaptureDevicePosition _cameraPosition;
 }
 
 @synthesize textureId  = _textureId;
@@ -39,6 +40,7 @@
         _rotation  = -1;
         _isLandscapeMode = false;
         _textureId  = [registry registerTexture:self];
+        _cameraPosition = AVCaptureDevicePositionUnspecified;
         /*Create Event Channel.*/
         _eventChannel = [FlutterEventChannel
                                        eventChannelWithName:[NSString stringWithFormat:@"FlutterWebRTC/Texture%lld", _textureId]
@@ -137,18 +139,26 @@
     switch(currentRotation) {
         case RTCVideoRotation_90:
             if (_prevRotation == RTCVideoRotation_180) {
-                return RTCVideoRotation_180;
+                return [self swapRotation] ? RTCVideoRotation_0 : RTCVideoRotation_180;
             }
-            return RTCVideoRotation_0;
+            return [self swapRotation] ? RTCVideoRotation_180 : RTCVideoRotation_0;
         case RTCVideoRotation_270:
             if (_prevRotation == RTCVideoRotation_0) {
-                return RTCVideoRotation_0;
+                return [self swapRotation] ? RTCVideoRotation_180 : RTCVideoRotation_0;
             }
-            return RTCVideoRotation_180;
+            return [self swapRotation] ? RTCVideoRotation_0 : RTCVideoRotation_180;
         default:
             _prevRotation = currentRotation;
-            return currentRotation;
+            return _prevRotation;
     }
+}
+
+- (BOOL)swapRotation {
+    return _cameraPosition == AVCaptureDevicePositionFront;
+}
+
+- (void)setCameraPosition:(AVCaptureDevicePosition)position {
+    _cameraPosition = position;
 }
 
 -(void)copyI420ToCVPixelBuffer:(CVPixelBufferRef)outputPixelBuffer withFrame:(RTCVideoFrame *) frame

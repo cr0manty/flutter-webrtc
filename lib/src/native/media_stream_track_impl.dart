@@ -64,7 +64,10 @@ class MediaStreamTrackNative extends MediaStreamTrack {
       );
 
   @override
-  Future<bool> switchCamera() => Helper.switchCamera(this);
+  Future<bool> switchCamera(int? textureId) => Helper.switchCamera(
+        this,
+        textureId: textureId,
+      );
 
   @override
   void enableSpeakerphone(bool enable) async {

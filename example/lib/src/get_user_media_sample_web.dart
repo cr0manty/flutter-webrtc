@@ -196,7 +196,10 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
     if (_localStream == null) return;
 
     await Helper.switchCamera(
-        _localStream!.getVideoTracks()[0], deviceId, _localStream);
+      _localStream!.getVideoTracks()[0],
+      deviceId: deviceId,
+      stream: _localStream,
+    );
     setState(() {});
   }
 }

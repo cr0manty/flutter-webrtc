@@ -36,12 +36,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
 #if TARGET_OS_IPHONE
     // Default to portrait orientation on iPhone.
-    RTCVideoRotation rotation = RTCVideoRotation_90;
-    BOOL usingFrontCamera = NO;
-    // Check the image's EXIF for the camera the image came from as the image could have been
-    // delayed as we set alwaysDiscardsLateVideoFrames to NO.
-    UIDeviceOrientation _orientation =  [UIDevice currentDevice].orientation;
-    rotation = [self getLandscapeRotation: _orientation];
+    RTCVideoRotation rotation = [self getLandscapeRotation];
 #else
     // No rotation on Mac.
     RTCVideoRotation rotation = RTCVideoRotation_0;
@@ -55,7 +50,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [self.delegate capturer:self didCaptureVideoFrame:videoFrame];
 }
 
--(RTCVideoRotation) getLandscapeRotation:(UIDeviceOrientation) currentRotation {
+-(RTCVideoRotation) getLandscapeRotation {
+    UIDeviceOrientation currentRotation =  [UIDevice currentDevice].orientation;
+    
     if (!_isLandscapeMode) {
         return [self getDefaultLandscapeRotation: currentRotation];
     }
