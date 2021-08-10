@@ -3,6 +3,7 @@
 #import "FlutterRTCMediaStream.h"
 #import "FlutterRTCDataChannel.h"
 #import "FlutterRTCVideoRenderer.h"
+#import "FlutterRTCCameraVideoCapturer.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <WebRTC/WebRTC.h>
@@ -470,6 +471,11 @@
         BOOL landscapeMode = [argsMap[@"landscapeMode"] boolValue];
         
         [render setLandscapeMode:landscapeMode];
+        [self.videoCapturer setLandscapeMode:landscapeMode];
+        AVCaptureConnection *videoConnection = [self.videoCapturer.captureSession.connections objectAtIndex:0];
+        
+        [videoConnection setVideoOrientation:AVCaptureVideoOrientationLandscapeRight];
+            
         result(nil);
     } else if ([@"videoRendererSetSrcObject" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;

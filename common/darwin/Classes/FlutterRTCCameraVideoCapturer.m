@@ -222,7 +222,7 @@
     [self copyI420ToCVPixelBuffer:_pixelBufferRef withFrame:frame];
 
     __weak FlutterRTCVideoRenderer *weakSelf = self;
-    if(_renderSize.width != frame.width || _renderSize.height != frame.height){
+    if(!_isLandscapeMode && (_renderSize.width != frame.width || _renderSize.height != frame.height)){
         dispatch_async(dispatch_get_main_queue(), ^{
             FlutterRTCVideoRenderer *strongSelf = weakSelf;
             if(strongSelf.eventSink){

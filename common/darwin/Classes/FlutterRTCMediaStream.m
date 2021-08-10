@@ -6,6 +6,7 @@
 #import "FlutterRTCMediaStream.h"
 #import "FlutterRTCPeerConnection.h"
 #import "FlutterRTCVideoRenderer.h"
+#import "FlutterRTCCameraVideoCapturer.h"
 
 #if TARGET_OS_IPHONE
 #import "FlutterRPScreenRecorder.h"
@@ -14,12 +15,12 @@
 @implementation AVCaptureDevice (Flutter)
 
 - (NSString*)positionString {
-  switch (self.position) {
-    case AVCaptureDevicePositionUnspecified: return @"unspecified";
-    case AVCaptureDevicePositionBack: return @"back";
-    case AVCaptureDevicePositionFront: return @"front";
-  }
-  return nil;
+    switch (self.position) {
+        case AVCaptureDevicePositionUnspecified: return @"unspecified";
+        case AVCaptureDevicePositionBack: return @"back";
+        case AVCaptureDevicePositionFront: return @"front";
+    }
+    return nil;
 }
 
 @end
@@ -93,29 +94,29 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     [self
      getUserMedia:constraints
      successCallback:^ (RTCMediaStream *mediaStream) {
-         NSString *mediaStreamId = mediaStream.streamId;
-         
-         NSMutableArray *audioTracks = [NSMutableArray array];
-         NSMutableArray *videoTracks = [NSMutableArray array];
-         
-         for (RTCAudioTrack *track in mediaStream.audioTracks) {
-             [self.localTracks setObject:track forKey:track.trackId];
-             [audioTracks addObject:@{@"id": track.trackId, @"kind": track.kind, @"label": track.trackId, @"enabled": @(track.isEnabled), @"remote": @(YES), @"readyState": @"live"}];
-         }
-         
-         for (RTCVideoTrack *track in mediaStream.videoTracks) {
-             [self.localTracks setObject:track forKey:track.trackId];
-             [videoTracks addObject:@{@"id": track.trackId, @"kind": track.kind, @"label": track.trackId, @"enabled": @(track.isEnabled), @"remote": @(YES), @"readyState": @"live"}];
-         }
-
-         self.localStreams[mediaStreamId] = mediaStream;
-         result(@{@"streamId": mediaStreamId, @"audioTracks" : audioTracks, @"videoTracks" : videoTracks });
-     }
+        NSString *mediaStreamId = mediaStream.streamId;
+        
+        NSMutableArray *audioTracks = [NSMutableArray array];
+        NSMutableArray *videoTracks = [NSMutableArray array];
+        
+        for (RTCAudioTrack *track in mediaStream.audioTracks) {
+            [self.localTracks setObject:track forKey:track.trackId];
+            [audioTracks addObject:@{@"id": track.trackId, @"kind": track.kind, @"label": track.trackId, @"enabled": @(track.isEnabled), @"remote": @(YES), @"readyState": @"live"}];
+        }
+        
+        for (RTCVideoTrack *track in mediaStream.videoTracks) {
+            [self.localTracks setObject:track forKey:track.trackId];
+            [videoTracks addObject:@{@"id": track.trackId, @"kind": track.kind, @"label": track.trackId, @"enabled": @(track.isEnabled), @"remote": @(YES), @"readyState": @"live"}];
+        }
+        
+        self.localStreams[mediaStreamId] = mediaStream;
+        result(@{@"streamId": mediaStreamId, @"audioTracks" : audioTracks, @"videoTracks" : videoTracks });
+    }
      errorCallback:^ (NSString *errorType, NSString *errorMessage) {
-         result([FlutterError errorWithCode:[NSString stringWithFormat:@"Error %@", errorType]
-                                    message:errorMessage
-                                    details:nil]);
-     }
+        result([FlutterError errorWithCode:[NSString stringWithFormat:@"Error %@", errorType]
+                                   message:errorMessage
+                                   details:nil]);
+    }
      mediaStream:mediaStream];
 }
 
@@ -253,6 +254,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
                     position = AVCaptureDevicePositionUnspecified;
                 }
                 videoDevice = [self findDeviceForPosition:position];
+                [self.videoCapturer setCameraPosition: position];
             }
         }
         if (!videoDevice) {
@@ -261,7 +263,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }
     
     //TODO(rostopira): refactor to separate function and add support for max
-
+    
     self._targetWidth = 1280;
     self._targetHeight = 720;
     self._targetFps = 30;
@@ -271,7 +273,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }
     
     id mandatory = [videoConstraints isKindOfClass:[NSDictionary class]]? videoConstraints[@"mandatory"] : nil ;
-
+    
     // constraints.video.mandatory
     if(mandatory && [mandatory isKindOfClass:[NSDictionary class]])
     {
@@ -305,13 +307,13 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
             [videoDevice unlockForConfiguration];
         }
     }
-
+    
     if (videoDevice) {
         RTCVideoSource *videoSource = [self.peerConnectionFactory videoSource];
         if (self.videoCapturer) {
             [self.videoCapturer stopCapture];
         }
-        self.videoCapturer = [[RTCCameraVideoCapturer alloc] initWithDelegate:videoSource];
+        self.videoCapturer = [[FlutterRTCCameraVideoCapturer alloc] initWithDelegate:videoSource];
         AVCaptureDeviceFormat *selectedFormat = [self selectFormatForDevice:videoDevice];
         NSInteger selectedFps = [self selectFpsForFormat:selectedFormat];
         [self.videoCapturer startCaptureWithDevice:videoDevice format:selectedFormat fps:selectedFps completionHandler:^(NSError *error) {
@@ -383,7 +385,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         });
         return;
     }
-
+    
 #if TARGET_OS_OSX
     if (@available(macOS 10.14, *)) {
 #endif
@@ -453,7 +455,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     
     RTCVideoSource *videoSource = [self.peerConnectionFactory videoSource];
     FlutterRPScreenRecorder *screenCapturer = [[FlutterRPScreenRecorder alloc] initWithDelegate:videoSource];
-
+    
     [screenCapturer startCapture];
     
     //TODO:
@@ -465,7 +467,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     
     NSMutableArray *audioTracks = [NSMutableArray array];
     NSMutableArray *videoTracks = [NSMutableArray array];
-
+    
     for (RTCVideoTrack *track in mediaStream.videoTracks) {
         [self.localTracks setObject:track forKey:track.trackId];
         [videoTracks addObject:@{@"id": track.trackId, @"kind": track.kind, @"label": track.trackId, @"enabled": @(track.isEnabled), @"remote": @(YES), @"readyState": @"live"}];
@@ -478,55 +480,55 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
 -(void)createLocalMediaStream:(FlutterResult)result{
     NSString *mediaStreamId = [[NSUUID UUID] UUIDString];
     RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:mediaStreamId];
-
+    
     self.localStreams[mediaStreamId] = mediaStream;
     result(@{@"streamId": [mediaStream streamId] });
 }
 
 -(void)getSources:(FlutterResult)result{
-  NSMutableArray *sources = [NSMutableArray array];
-  NSArray *videoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-  for (AVCaptureDevice *device in videoDevices) {
-    [sources addObject:@{
-                         @"facing": device.positionString,
-                         @"deviceId": device.uniqueID,
-                         @"label": device.localizedName,
-                         @"kind": @"videoinput",
-                         }];
-  }
-  NSArray *audioDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio];
-  for (AVCaptureDevice *device in audioDevices) {
-    [sources addObject:@{
-                         @"facing": @"",
-                         @"deviceId": device.uniqueID,
-                         @"label": device.localizedName,
-                         @"kind": @"audioinput",
-                         }];
-  }
+    NSMutableArray *sources = [NSMutableArray array];
+    NSArray *videoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    for (AVCaptureDevice *device in videoDevices) {
+        [sources addObject:@{
+            @"facing": device.positionString,
+            @"deviceId": device.uniqueID,
+            @"label": device.localizedName,
+            @"kind": @"videoinput",
+        }];
+    }
+    NSArray *audioDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio];
+    for (AVCaptureDevice *device in audioDevices) {
+        [sources addObject:@{
+            @"facing": @"",
+            @"deviceId": device.uniqueID,
+            @"label": device.localizedName,
+            @"kind": @"audioinput",
+        }];
+    }
     result(@{@"sources": sources});
 }
 
 -(void)mediaStreamTrackRelease:(RTCMediaStream *)mediaStream  track:(RTCMediaStreamTrack *)track
 {
-  // what's different to mediaStreamTrackStop? only call mediaStream explicitly?
-  if (mediaStream && track) {
-    track.isEnabled = NO;
-    // FIXME this is called when track is removed from the MediaStream,
-    // but it doesn't mean it can not be added back using MediaStream.addTrack
-    //TODO: [self.localTracks removeObjectForKey:trackID];
-    if ([track.kind isEqualToString:@"audio"]) {
-      [mediaStream removeAudioTrack:(RTCAudioTrack *)track];
-    } else if([track.kind isEqualToString:@"video"]) {
-      [mediaStream removeVideoTrack:(RTCVideoTrack *)track];
+    // what's different to mediaStreamTrackStop? only call mediaStream explicitly?
+    if (mediaStream && track) {
+        track.isEnabled = NO;
+        // FIXME this is called when track is removed from the MediaStream,
+        // but it doesn't mean it can not be added back using MediaStream.addTrack
+        //TODO: [self.localTracks removeObjectForKey:trackID];
+        if ([track.kind isEqualToString:@"audio"]) {
+            [mediaStream removeAudioTrack:(RTCAudioTrack *)track];
+        } else if([track.kind isEqualToString:@"video"]) {
+            [mediaStream removeVideoTrack:(RTCVideoTrack *)track];
+        }
     }
-  }
 }
 
 -(void)mediaStreamTrackSetEnabled:(RTCMediaStreamTrack *)track : (BOOL)enabled
 {
-  if (track && track.isEnabled != enabled) {
-    track.isEnabled = enabled;
-  }
+    if (track && track.isEnabled != enabled) {
+        track.isEnabled = enabled;
+    }
 }
 
 -(void)mediaStreamTrackHasTorch:(RTCMediaStreamTrack *)track result:(FlutterResult) result
@@ -539,10 +541,10 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         result(@NO);
         return;
     }
-
+    
     AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
     AVCaptureDevice *device = deviceInput.device;
-
+    
     result(@([device isTorchModeSupported:AVCaptureTorchModeOn]));
 }
 
@@ -556,24 +558,24 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         NSLog(@"Video capturer is missing an input. Can't set torch");
         return;
     }
-
+    
     AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
     AVCaptureDevice *device = deviceInput.device;
-
+    
     if (![device isTorchModeSupported:AVCaptureTorchModeOn]) {
         NSLog(@"Current capture device does not support torch. Can't set torch");
         return;
     }
-
+    
     NSError *error;
     if ([device lockForConfiguration:&error] == NO) {
         NSLog(@"Failed to aquire configuration lock. %@", error.localizedDescription);
         return;
     }
-
+    
     device.torchMode = torch ? AVCaptureTorchModeOn : AVCaptureTorchModeOff;
     [device unlockForConfiguration];
-
+    
     result(nil);
 }
 
@@ -591,6 +593,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         if (error != nil) {
             result([FlutterError errorWithCode:@"Error while switching camera" message:@"Error while switching camera" details:error]);
         } else {
+            [self.videoCapturer setCameraPosition: position];
             result([NSNumber numberWithBool:self._usingFrontCamera]);
         }
     }];
@@ -604,7 +607,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }
     AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
     AVCaptureDevice *videoDevice = deviceInput.device;
-
+    
     if (videoDevice) {
         NSError *error;
         if([videoDevice lockForConfiguration:&error]) {
@@ -614,7 +617,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         } else {
             result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:error]);
         }
-
+        
         if (error) {
             result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:error]);
         }
@@ -629,7 +632,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }
     AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
     AVCaptureDevice *videoDevice = deviceInput.device;
-
+    
     if (videoDevice) {
         NSError *error;
         if([videoDevice lockForConfiguration:&error]) {
@@ -639,7 +642,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         } else {
             result([FlutterError errorWithCode:@"Error while changing zoom" message:@"Error while changing zoom" details:error]);
         }
-
+        
         if (error) {
             result([FlutterError errorWithCode:@"Error while changing zoom" message:@"Error while changing zoom" details:error]);
         }
@@ -652,7 +655,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         NSLog(@"Video capturer is null. Can't capture frame.");
         return;
     }
-
+    
     self.frameCapturer = [[FlutterRTCFrameCapturer alloc] initWithTrack:track toPath:path result:result];
 }
 
