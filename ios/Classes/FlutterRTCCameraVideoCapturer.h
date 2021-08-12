@@ -1,5 +1,5 @@
 #import <WebRTC/WebRTC.h>
-#if TARGET_OS_IPHONE
+
 @interface FlutterRTCCameraVideoCapturer: RTCCameraVideoCapturer
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
@@ -11,4 +11,3 @@
 - (void)setCameraPosition:(AVCaptureDevicePosition)position;
 
 @end
-#endif

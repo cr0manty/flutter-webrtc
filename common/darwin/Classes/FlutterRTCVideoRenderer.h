@@ -18,10 +18,6 @@
 - (instancetype)initWithTextureRegistry:(id<FlutterTextureRegistry>)registry
                               messenger:(NSObject<FlutterBinaryMessenger>*)messenger;
 
-- (void)setLandscapeMode:(BOOL)landscapeMode;
-
-- (void)setCameraPosition:(AVCaptureDevicePosition)position;
-
 - (void)dispose;
 
 @end

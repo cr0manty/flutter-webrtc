@@ -143,7 +143,6 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
         .firstWhere((track) => track.kind == 'video');
     await Helper.switchCamera(
       videoTrack,
-      textureId: _localRenderer.textureId,
     );
   }
 

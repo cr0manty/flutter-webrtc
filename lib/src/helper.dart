@@ -74,7 +74,6 @@ class Helper {
   /// For web implementation, make sure to pass the target deviceId
   static Future<bool> switchCamera(
     MediaStreamTrack track, {
-    int? textureId,
     String? deviceId,
     MediaStream? stream,
   }) async {
@@ -87,7 +86,6 @@ class Helper {
         'mediaStreamTrackSwitchCamera',
         <String, dynamic>{
           'trackId': track.id,
-          'textureId': textureId,
         },
       ).then((value) => value ?? false);
     }

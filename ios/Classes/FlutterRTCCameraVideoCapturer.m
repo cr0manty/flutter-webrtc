@@ -1,6 +1,5 @@
 #import <WebRTC/WebRTC.h>
 
-#if TARGET_OS_IPHONE
 #import <ReplayKit/ReplayKit.h>
 #import "FlutterRTCCameraVideoCapturer.h"
 
@@ -17,7 +16,7 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 - (instancetype)initWithDelegate:(__weak id<RTCVideoCapturerDelegate>)delegate {
     self = [super initWithDelegate:delegate];
     _isLandscapeMode = false;
-    _cameraPosition = AVCaptureDevicePositionUnspecified;
+    _cameraPosition = AVCaptureDevicePositionBack;
     
     return self;
 }
@@ -25,7 +24,6 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
-    NSParameterAssert(captureOutput == _videoDataOutput);
     if (CMSampleBufferGetNumSamples(sampleBuffer) != 1 || !CMSampleBufferIsValid(sampleBuffer) ||
         !CMSampleBufferDataIsReady(sampleBuffer)) {
         return;
@@ -84,14 +82,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
             return [self swapRotation] ? RTCVideoRotation_180 : RTCVideoRotation_0;
         case UIDeviceOrientationLandscapeRight:
             return [self swapRotation] ? RTCVideoRotation_0 : RTCVideoRotation_180;
-        case UIDeviceOrientationFaceUp:
-        case UIDeviceOrientationFaceDown:
-        case UIDeviceOrientationUnknown:
-            // Ignore.
-            break;
-            
+        default:
+            return _prevRotation;
     }
-    return RTCVideoRotation_0;
 }
 
 - (void)setLandscapeMode:(BOOL)landscapeMode {
@@ -107,4 +100,3 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 @end
-#endif

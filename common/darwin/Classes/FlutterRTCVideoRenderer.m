@@ -15,11 +15,8 @@
     CGSize _renderSize;
     CVPixelBufferRef _pixelBufferRef;
     RTCVideoRotation _rotation;
-    RTCVideoRotation _prevRotation;
     FlutterEventChannel* _eventChannel;
     bool _isFirstFrameRendered;
-    bool _isLandscapeMode;
-    AVCaptureDevicePosition _cameraPosition;
 }
 
 @synthesize textureId  = _textureId;
@@ -38,9 +35,7 @@
         _pixelBufferRef = nil;
         _eventSink = nil;
         _rotation  = -1;
-        _isLandscapeMode = false;
         _textureId  = [registry registerTexture:self];
-        _cameraPosition = AVCaptureDevicePositionUnspecified;
         /*Create Event Channel.*/
         _eventChannel = [FlutterEventChannel
                                        eventChannelWithName:[NSString stringWithFormat:@"FlutterWebRTC/Texture%lld", _textureId]
@@ -48,23 +43,6 @@
         [_eventChannel setStreamHandler:self];
     }
     return self;
-}
-
-- (void)setLandscapeMode:(BOOL)landscapeMode {
-    _isLandscapeMode = landscapeMode;
-    __weak FlutterRTCVideoRenderer *weakSelf = self;
-    _rotation = RTCVideoRotation_180;
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        FlutterRTCVideoRenderer *strongSelf = weakSelf;
-        if(strongSelf.eventSink){
-            strongSelf.eventSink(@{
-                               @"event" : @"didTextureChangeRotation",
-                               @"id": @(strongSelf.textureId),
-                               @"rotation": @(self->_rotation),
-                               });
-        }
-    });
 }
 
 -(void)dealloc {
@@ -131,44 +109,10 @@
     return buffer;
 }
 
--(RTCVideoRotation) getLandscapeRotation:(RTCVideoRotation) currentRotation {
-    if (!_isLandscapeMode) {
-        return currentRotation;
-    }
-    
-    switch(currentRotation) {
-        case RTCVideoRotation_90:
-            if (_prevRotation == RTCVideoRotation_180) {
-                return [self swapRotation] ? RTCVideoRotation_0 : RTCVideoRotation_180;
-            }
-            return [self swapRotation] ? RTCVideoRotation_180 : RTCVideoRotation_0;
-        case RTCVideoRotation_270:
-            if (_prevRotation == RTCVideoRotation_0) {
-                return [self swapRotation] ? RTCVideoRotation_180 : RTCVideoRotation_0;
-            }
-            return [self swapRotation] ? RTCVideoRotation_0 : RTCVideoRotation_180;
-        default:
-            _prevRotation = currentRotation;
-            return _prevRotation;
-    }
-}
-
-- (BOOL)swapRotation {
-    return _cameraPosition == AVCaptureDevicePositionFront;
-}
-
-- (void)setCameraPosition:(AVCaptureDevicePosition)position {
-    _cameraPosition = position;
-}
-
 -(void)copyI420ToCVPixelBuffer:(CVPixelBufferRef)outputPixelBuffer withFrame:(RTCVideoFrame *) frame
 {
-    RTCVideoRotation rotation = [self getLandscapeRotation: frame.rotation];
-//    NSLog(@"%@", [NSString stringWithFormat:@"Current rotation: %ld", (long)frame.rotation]);
-//    NSLog(@"%@", [NSString stringWithFormat:@"Prev rotation: %ld", (long)_prevRotation]);
-//    NSLog(@"%@", [NSString stringWithFormat:@"Requested rotation: %ld", (long)rotation]);
-    
-    id<RTCI420Buffer> i420Buffer = [self correctRotation:[frame.buffer toI420] withRotation:rotation];
+
+    id<RTCI420Buffer> i420Buffer = [self correctRotation:[frame.buffer toI420] withRotation:frame.rotation];
     CVPixelBufferLockBaseAddress(outputPixelBuffer, 0);
 
     const OSType pixelFormat = CVPixelBufferGetPixelFormatType(outputPixelBuffer);
@@ -232,7 +176,7 @@
     [self copyI420ToCVPixelBuffer:_pixelBufferRef withFrame:frame];
 
     __weak FlutterRTCVideoRenderer *weakSelf = self;
-    if(!_isLandscapeMode && (_renderSize.width != frame.width || _renderSize.height != frame.height)){
+    if(_renderSize.width != frame.width || _renderSize.height != frame.height){
         dispatch_async(dispatch_get_main_queue(), ^{
             FlutterRTCVideoRenderer *strongSelf = weakSelf;
             if(strongSelf.eventSink){
@@ -247,7 +191,7 @@
         _renderSize = CGSizeMake(frame.width, frame.height);
     }
 
-    if(!_isLandscapeMode && frame.rotation != _rotation){
+    if(frame.rotation != _rotation){
         dispatch_async(dispatch_get_main_queue(), ^{
             FlutterRTCVideoRenderer *strongSelf = weakSelf;
             if(strongSelf.eventSink){
@@ -281,16 +225,10 @@
  * @param size The size of the video frame to render.
  */
 - (void)setSize:(CGSize)size {
-    if (_isLandscapeMode && size.width < size.height) {
-        int temp = size.width;
 
-        size.width = size.height;
-        size.height = temp;
-    }
 
-    if(_pixelBufferRef == nil || (size.width != _frameSize.width || size.height != _frameSize.height))
-    {
-        if(_pixelBufferRef){
+    if(_pixelBufferRef == nil || (size.width != _frameSize.width || size.height != _frameSize.height)) {
+        if(_pixelBufferRef) {
             CVBufferRelease(_pixelBufferRef);
         }
         NSDictionary *pixelAttributes = @{(id)kCVPixelBufferIOSurfacePropertiesKey : @{}};

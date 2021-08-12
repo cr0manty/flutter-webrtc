@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -63,6 +65,8 @@ class RTCVideoRendererNative extends VideoRenderer {
 
   @override
   Future<void> setLandscapeMode(bool isLandscapeSupported) async {
+    if (kIsWeb || Platform.isAndroid) return;
+
     if (textureId == null) throw 'Call initialize before setting the stream';
 
     await _channel.invokeMethod('setLandscapeMode', <String, dynamic>{

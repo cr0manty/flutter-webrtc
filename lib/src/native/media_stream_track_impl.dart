@@ -64,9 +64,8 @@ class MediaStreamTrackNative extends MediaStreamTrack {
       );
 
   @override
-  Future<bool> switchCamera(int? textureId) => Helper.switchCamera(
+  Future<bool> switchCamera() => Helper.switchCamera(
         this,
-        textureId: textureId,
       );
 
   @override
