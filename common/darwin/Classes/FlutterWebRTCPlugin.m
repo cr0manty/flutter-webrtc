@@ -76,7 +76,28 @@
     self.localTracks = [NSMutableDictionary new];
     self.renders = [[NSMutableDictionary alloc] init];
 #if TARGET_OS_IPHONE
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+//    NSError* error;
+//    AVAudioSession* session = [AVAudioSession sharedInstance];
+//    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions:AVAudioSessionCategoryOptionMixWithOthers|
+//     AVAudioSessionCategoryOptionAllowBluetooth|
+//     AVAudioSessionCategoryOptionDefaultToSpeaker
+//                   error:&error];
+//    [session setActive:TRUE error:nil];
+//
+//    if (error!=nil){
+//        NSLog(@"Error %@", error);
+//    }
+//    AVAudioSession* session = [AVAudioSession sharedInstance];
+//    [session setCategory:AVAudioSessionCategoryMultiRoute
+//                withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker|AVAudioSessionCategoryOptionAllowBluetooth error:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+    [RTCAudioSession sharedInstance];
+//    [session setActive:YES error:nil];
+    
+//    [session setCategory:AVAudioSessionCategoryPlayAndRecord
+//                withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker|AVAudioSessionCategoryOptionAllowBluetooth error:nil];
+//    [session setMode:AVAudioSessionModeVideoRecording error:nil];
 #endif
     return self;
 }
@@ -86,7 +107,27 @@
 #if TARGET_OS_IPHONE
   NSDictionary *interuptionDict = notification.userInfo;
   NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
-
+  
+ 
+//    NSError* error;
+//    NSLog(@"Route change");
+//        
+//    AVAudioSession* session = [AVAudioSession sharedInstance];
+//    
+//    
+//    for (AVAudioSessionPortDescription *destPort in session.availableInputs){
+//        NSLog(@"PORT DESC %@", destPort.portName);
+////        [[RTCAudioSession sharedInstance] lockForConfiguration];
+////        [[RTCAudioSession sharedInstance] setPreferredInput:destPort error:&error];
+////        [[RTCAudioSession sharedInstance] unlockForConfiguration];
+//        
+//        [session setPreferredInput:destPort error:&error];
+//        
+//        if (error!=nil){
+//            NSLog(@"PORT DESC Error %@", error);
+//        }
+//    }
+    
   switch (routeChangeReason) {
       case AVAudioSessionRouteChangeReasonCategoryChange: {
           NSError* error;
