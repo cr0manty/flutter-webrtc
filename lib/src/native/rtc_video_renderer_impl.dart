@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import '../helper.dart';
 import '../interface/media_stream.dart';
 import '../interface/rtc_video_renderer.dart';
 import 'utils.dart';
