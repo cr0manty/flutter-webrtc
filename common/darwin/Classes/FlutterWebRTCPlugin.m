@@ -76,7 +76,15 @@
     self.localTracks = [NSMutableDictionary new];
     self.renders = [[NSMutableDictionary alloc] init];
 #if TARGET_OS_IPHONE
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:nil];
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+
+    [session setPreferredSampleRate:192000 error:nil];
+    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
+    [session setActive:YES withOptions:kAudioSessionSetActiveFlag_NotifyOthersOnDeactivation error:nil];
+    
+    [session setActive:YES error:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
     return self;
 }
@@ -84,19 +92,56 @@
 
 - (void)didSessionRouteChange:(NSNotification *)notification {
 #if TARGET_OS_IPHONE
-  NSDictionary *interuptionDict = notification.userInfo;
-  NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
+    NSDictionary *interuptionDict = notification.userInfo;
+    NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
 
-  switch (routeChangeReason) {
-      case AVAudioSessionRouteChangeReasonCategoryChange: {
-          NSError* error;
-          [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
-      }
-      break;
+    AVAudioSessionRouteDescription *routeDescription = [notification.userInfo valueForKey:AVAudioSessionRouteChangePreviousRouteKey];
 
-    default:
-      break;
-  }
+    NSLog(@"Route change:");
+    switch (routeChangeReason) {
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+            NSLog(@"     NewDeviceAvailable");
+            break;
+        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
+            NSLog(@"     OldDeviceUnavailable");
+            break;
+        case AVAudioSessionRouteChangeReasonCategoryChange: {
+            AVAudioSession *session = [AVAudioSession sharedInstance];
+            if ([session category] != AVAudioSessionCategoryMultiRoute) {
+                NSError* setCategoryError;
+                [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
+                           error:&setCategoryError];
+                if(setCategoryError != nil) {
+                    NSLog(@"setCategoryError: %@", setCategoryError);
+                }
+            }
+
+            NSError* error;
+            [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
+            if(error != nil) {
+                NSLog(@"setCategoryError: %@", error);
+            }
+            NSLog(@"     CategoryChange");
+            NSLog(@" New Category: %@", [[AVAudioSession sharedInstance] category]);
+            break;
+            }
+        case AVAudioSessionRouteChangeReasonOverride:
+            NSLog(@"     Override");
+            break;
+        case AVAudioSessionRouteChangeReasonWakeFromSleep:
+            NSLog(@"     WakeFromSleep");
+            break;
+        case AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory:
+            NSLog(@"     NoSuitableRouteForCategory");
+            break;
+        default:
+            NSLog(@"     ReasonUnknown");
+        }
+
+    NSLog(@"Previous route:\n");
+    NSLog(@"%@\n", routeDescription);
+    NSLog(@"Current route:\n");
+    NSLog(@"%@\n", [AVAudioSession sharedInstance].currentRoute);
 #endif
 }
 

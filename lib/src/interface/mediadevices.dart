@@ -145,4 +145,8 @@ class MediaDeviceInfo {
   /// Returns a String that is a label describing this device
   /// (for example "External USB Webcam").
   final String label;
+
+  @override
+  String toString() => 'kind: $kind label: $label'
+      ' groupId: $groupId deviceId: $deviceId';
 }
