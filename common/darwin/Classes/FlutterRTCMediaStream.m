@@ -608,7 +608,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
     AVCaptureDevice *videoDevice = deviceInput.device;
     
-    if (videoDevice) {
+    if (videoDevice && !self._usingFrontCamera) {
         NSError *error;
         if([videoDevice lockForConfiguration:&error]) {
             [videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
