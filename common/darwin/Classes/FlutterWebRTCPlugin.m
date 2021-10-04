@@ -4,6 +4,7 @@
 #import "FlutterRTCDataChannel.h"
 #import "FlutterRTCVideoRenderer.h"
 #import "FlutterRTCCameraVideoCapturer.h"
+#import "AudioUtils.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <WebRTC/WebRTC.h>
@@ -77,9 +78,6 @@
     self.renders = [[NSMutableDictionary alloc] init];
 #if TARGET_OS_IPHONE
     AVAudioSession *session = [AVAudioSession sharedInstance];
-
-    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
-    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
     return self;
@@ -88,29 +86,23 @@
 
 - (void)didSessionRouteChange:(NSNotification *)notification {
 #if TARGET_OS_IPHONE
-    NSDictionary *interuptionDict = notification.userInfo;
-    NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
+  NSDictionary *interuptionDict = notification.userInfo;
+  NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
 
-    switch (routeChangeReason) {
-        case AVAudioSessionRouteChangeReasonCategoryChange: {
-            AVAudioSession *session = [AVAudioSession sharedInstance];
-            if ([session category] != AVAudioSessionCategoryMultiRoute) {
-                NSError* setCategoryError;
-                [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
-                           error:&setCategoryError];
-                if(setCategoryError != nil) {
-                    NSLog(@"setCategoryError: %@", setCategoryError);
-                }
-            }
+  switch (routeChangeReason) {
+      case AVAudioSessionRouteChangeReasonCategoryChange: {
+          NSError* error;
+          [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
+          break;
+      }
+      case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
+          [AudioUtils setPreferHeadphoneInput];
+          break;
+      }
 
-            NSError* error;
-            [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
-            if(error != nil) {
-                NSLog(@"setCategoryError: %@", error);
-            }
-            break;
-            }
-        }
+    default:
+      break;
+  }
 #endif
 }
 
@@ -464,10 +456,8 @@
         }
         result(nil);
     } else if ([@"createVideoRenderer" isEqualToString:call.method]){
-        FlutterRTCVideoRenderer* render;
-        render = [self createWithTextureRegistry:_textures
-                                      messenger:_messenger];
-   
+        FlutterRTCVideoRenderer* render = [self createWithTextureRegistry:_textures
+                                          messenger:_messenger];
         self.renders[@(render.textureId)] = render;
         result(@{@"textureId": @(render.textureId)});
     } else if ([@"videoRendererDispose" isEqualToString:call.method]){
@@ -477,12 +467,6 @@
         render.videoTrack = nil;
         [render dispose];
         [self.renders removeObjectForKey:textureId];
-        result(nil);
-    } else if ([@"setLandscapeMode" isEqualToString:call.method]) {
-        NSDictionary* argsMap = call.arguments;
-        BOOL landscapeMode = [argsMap[@"landscapeMode"] boolValue];
-        [self.videoCapturer setLandscapeMode:landscapeMode];
-            
         result(nil);
     } else if ([@"videoRendererSetSrcObject" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -509,7 +493,6 @@
                 NSLog(@"Not found video track for RTCMediaStream: %@", streamId);
             }
         }
-        
         [self rendererSetSrcObject:render stream:videoTrack];
         result(nil);
     } else if ([@"mediaStreamTrackHasTorch" isEqualToString:call.method]) {
@@ -544,7 +527,6 @@
     } else if ([@"mediaStreamTrackSwitchCamera" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];
-
         RTCMediaStreamTrack *track = self.localTracks[trackId];
         if (track != nil && [track isKindOfClass:[RTCVideoTrack class]]) {
             RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
@@ -556,13 +538,6 @@
                 result([FlutterError errorWithCode:[@"Track is class of " stringByAppendingString:[[track class] description]] message:nil details:nil]);
             }
         }
-    } else if ([@"mediaStreamChangeFocus" isEqualToString:call.method]){
-        [self mediaStreamChangeFocus:result];
-    } else if ([@"mediaStreamChangeZoom" isEqualToString:call.method]){
-        NSDictionary* argsMap = call.arguments;
-        CGFloat zoom = [[argsMap objectForKey:@"zoom"] floatValue];
-        
-        [self mediaStreamChangeZoom:zoom result:result];
     } else if ([@"setVolume" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];
