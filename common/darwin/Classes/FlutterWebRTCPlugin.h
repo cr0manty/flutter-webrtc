@@ -5,7 +5,7 @@
 #endif
 
 #import <Foundation/Foundation.h>
-#import <WebRTC/WebRTC.h>
+#import "WebRTC/WebRTC.h"
 
 @class FlutterRTCVideoRenderer;
 @class FlutterRTCFrameCapturer;

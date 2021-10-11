@@ -4,7 +4,6 @@
 #import "FlutterRTCDataChannel.h"
 #import "FlutterRTCVideoRenderer.h"
 #import "FlutterRTCCameraVideoCapturer.h"
-#import "AudioUtils.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <WebRTC/WebRTC.h>
@@ -78,6 +77,8 @@
     self.renders = [[NSMutableDictionary alloc] init];
 #if TARGET_OS_IPHONE
     AVAudioSession *session = [AVAudioSession sharedInstance];
+    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
+        
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
     return self;
@@ -91,12 +92,18 @@
 
   switch (routeChangeReason) {
       case AVAudioSessionRouteChangeReasonCategoryChange: {
+          AVAudioSession *session = [AVAudioSession sharedInstance];
+          if ([session category] != AVAudioSessionCategoryMultiRoute) {
+             NSError* setCategoryError;
+             [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
+                        error:&setCategoryError];
+             if(setCategoryError != nil) {
+                 NSLog(@"setCategoryError: %@", setCategoryError);
+             }
+         }
+          
           NSError* error;
           [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
-          break;
-      }
-      case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
-          [AudioUtils setPreferHeadphoneInput];
           break;
       }
 
@@ -382,6 +389,23 @@
             track.isEnabled = enabled.boolValue;
         }
         result(nil);
+    } else if ([@"mediaStreamChangeFocus" isEqualToString:call.method]){
+        NSDictionary* argsMap = call.arguments;
+        int lock = [[argsMap objectForKey:@"lock"] intValue];
+        
+        [self mediaStreamChangeFocus:lock result:result];
+    } else if ([@"mediaStreamChangeZoom" isEqualToString:call.method]){
+        NSDictionary* argsMap = call.arguments;
+        CGFloat zoom = [[argsMap objectForKey:@"zoom"] floatValue];
+        
+        [self mediaStreamChangeZoom:zoom result:result];
+        result(nil);
+   } else if ([@"setLandscapeMode" isEqualToString:call.method]) {
+       NSDictionary* argsMap = call.arguments;
+       BOOL landscapeMode = [argsMap[@"landscapeMode"] boolValue];
+       [self.videoCapturer setLandscapeMode:landscapeMode];
+           
+       result(nil);
     } else if ([@"mediaStreamAddTrack" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* streamId = argsMap[@"streamId"];

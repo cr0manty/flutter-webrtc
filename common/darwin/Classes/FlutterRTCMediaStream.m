@@ -303,7 +303,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     if (videoDevice) {
         NSError *error;
         if([videoDevice lockForConfiguration:&error]) {
-            [videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
+            [videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
             [videoDevice unlockForConfiguration];
         }
     }
@@ -599,7 +599,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }];
 }
 
--(void)mediaStreamChangeFocus:(FlutterResult)result
+-(void)mediaStreamChangeFocus:(BOOL)lock result:(FlutterResult)result
 {
     if (!self.videoCapturer) {
         NSLog(@"Video capturer is null. Can't change focus");
@@ -611,7 +611,20 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     if (videoDevice && !self._usingFrontCamera) {
         NSError *error;
         if([videoDevice lockForConfiguration:&error]) {
-            [videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
+            NSLog(@"current foucs: %ldd", (long)videoDevice.focusMode);
+            
+            if (videoDevice.focusMode == AVCaptureFocusModeContinuousAutoFocus && [videoDevice isFocusModeSupported:AVCaptureFocusModeLocked]) {
+                CGPoint autofocusPoint = CGPointMake(0.5f, 0.5f);
+                [videoDevice setFocusPointOfInterest:autofocusPoint];
+                [videoDevice setFocusMode:AVCaptureFocusModeLocked];
+            } else if ([videoDevice isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
+                [videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
+            } else {
+                [videoDevice unlockForConfiguration];
+                result([NSNumber numberWithBool:FALSE]);
+                return;
+            }
+            
             [videoDevice unlockForConfiguration];
             result([NSNumber numberWithBool:TRUE]);
         } else {
