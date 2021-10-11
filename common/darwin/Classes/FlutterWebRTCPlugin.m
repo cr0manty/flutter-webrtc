@@ -557,7 +557,9 @@
             }
         }
     } else if ([@"mediaStreamChangeFocus" isEqualToString:call.method]){
-        [self mediaStreamChangeFocus:result];
+        NSDictionary* argsMap = call.arguments;
+        BOOL lock = [[argsMap objectForKey:@"lock"] boolValue];
+        [self mediaStreamChangeFocus:lock result:result];
     } else if ([@"mediaStreamChangeZoom" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         CGFloat zoom = [[argsMap objectForKey:@"zoom"] floatValue];

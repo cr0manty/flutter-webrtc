@@ -23,7 +23,8 @@
 -(void)mediaStreamTrackSwitchCamera:(RTCMediaStreamTrack *)track
                              result:(FlutterResult) result;
 
--(void)mediaStreamChangeFocus:(FlutterResult)result;
+-(void)mediaStreamChangeFocus:(BOOL)focus
+                              result:(FlutterResult)result;
 
 -(void)mediaStreamChangeZoom:(CGFloat)zoom
                             result:(FlutterResult)result;
