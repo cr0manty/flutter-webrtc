@@ -607,10 +607,10 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }
     AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
     AVCaptureDevice *videoDevice = deviceInput.device;
+    NSError *lockError;
     
-    if (videoDevice && !self._usingFrontCamera) {
-        NSError *error;
-        NSLog(@"current foucs: %ldd", (long)videoDevice.focusMode);
+    if (videoDevice && [videoDevice lockForConfiguration:&lockError] && !self._usingFrontCamera) {
+        NSLog(@"current focus: %ldd", (long)videoDevice.focusMode);
                   
         if (lock && [videoDevice isFocusModeSupported:AVCaptureFocusModeLocked]) {
           CGPoint autofocusPoint = CGPointMake(0.5f, 0.5f);
@@ -623,10 +623,11 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
           result([NSNumber numberWithBool:FALSE]);
           return;
         }
-        if (error) {
-            result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:error]);
-        }
+        result([NSNumber numberWithBool:TRUE]);
+    } else {
+        result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:lockError]);
     }
+    
 }
 
 -(void)mediaStreamChangeZoom:(CGFloat)zoom result:(FlutterResult)result
