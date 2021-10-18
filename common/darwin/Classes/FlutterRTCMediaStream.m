@@ -623,6 +623,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
           result([NSNumber numberWithBool:FALSE]);
           return;
         }
+        [videoDevice unlockForConfiguration];
         result([NSNumber numberWithBool:TRUE]);
     } else {
         result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:lockError]);
