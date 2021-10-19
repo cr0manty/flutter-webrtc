@@ -45,11 +45,11 @@ class Helper {
   }
 
   // trigger focus
-  static Future<bool> changeFocus(bool lock) {
+  static Future<bool> changeFocus() {
     if (!kIsWeb && !Platform.isAndroid) {
       return WebRTC.methodChannel().invokeMethod<bool>(
         'mediaStreamChangeFocus',
-        <String, dynamic>{'lock': lock},
+        <String, dynamic>{},
       ).then((value) => value ?? false);
     }
 

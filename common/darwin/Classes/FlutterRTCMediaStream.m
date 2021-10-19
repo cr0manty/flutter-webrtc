@@ -302,8 +302,9 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     
     if (videoDevice) {
         NSError *error;
-        if([videoDevice lockForConfiguration:&error]) {
-            [videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
+        if([videoDevice lockForConfiguration:&error] &&
+           [videoDevice isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
+            [videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
             [videoDevice unlockForConfiguration];
         }
     }
@@ -599,7 +600,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }];
 }
 
--(void)mediaStreamChangeFocus:(BOOL)lock result:(FlutterResult)result
+-(void)mediaStreamChangeFocus:(FlutterResult)result
 {
     if (!self.videoCapturer) {
         NSLog(@"Video capturer is null. Can't change focus");
@@ -609,22 +610,10 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     AVCaptureDevice *videoDevice = deviceInput.device;
     NSError *lockError;
     
-    if (videoDevice && [videoDevice lockForConfiguration:&lockError] && !self._usingFrontCamera) {
-        NSLog(@"current focus: %ldd", (long)videoDevice.focusMode);
-                  
-        if (lock && [videoDevice isFocusModeSupported:AVCaptureFocusModeLocked]) {
-          CGPoint autofocusPoint = CGPointMake(0.5f, 0.5f);
-          [videoDevice setFocusPointOfInterest:autofocusPoint];
-          [videoDevice setFocusMode:AVCaptureFocusModeLocked];
-        } else if ([videoDevice isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
-          [videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
-        } else {
-          [videoDevice unlockForConfiguration];
-          result([NSNumber numberWithBool:FALSE]);
-          return;
-        }
-        [videoDevice unlockForConfiguration];
-        result([NSNumber numberWithBool:TRUE]);
+    if (videoDevice && [videoDevice lockForConfiguration:&lockError] && !self._usingFrontCamera && [videoDevice isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
+       [videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
+       [videoDevice unlockForConfiguration];
+       result([NSNumber numberWithBool:TRUE]);
     } else {
         result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:lockError]);
     }
