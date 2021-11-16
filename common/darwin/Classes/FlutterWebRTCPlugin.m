@@ -4,6 +4,7 @@
 #import "FlutterRTCDataChannel.h"
 #import "FlutterRTCVideoRenderer.h"
 #import "FlutterRTCCameraVideoCapturer.h"
+#import "AudioUtils.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <WebRTC/WebRTC.h>
@@ -12,7 +13,7 @@
 #pragma clang diagnostic ignored "-Wprotocol"
 
 @implementation FlutterWebRTCPlugin {
-    
+
 #pragma clang diagnostic pop
 
     FlutterMethodChannel *_methodChannel;
@@ -25,7 +26,7 @@
 @synthesize messenger = _messenger;
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-    
+
     FlutterMethodChannel* channel = [FlutterMethodChannel
                                      methodChannelWithName:@"FlutterWebRTC.Method"
                                      binaryMessenger:[registrar messenger]];
@@ -65,12 +66,15 @@
     //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
     RTCDefaultVideoDecoderFactory *decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
     RTCDefaultVideoEncoderFactory *encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
-    
+
+    RTCVideoEncoderFactorySimulcast *simulcastFactory = [[RTCVideoEncoderFactorySimulcast alloc]  initWithPrimary:encoderFactory
+                                                                                                         fallback:encoderFactory];
+
     _peerConnectionFactory = [[RTCPeerConnectionFactory alloc]
-                              initWithEncoderFactory:encoderFactory
+                              initWithEncoderFactory:simulcastFactory
                               decoderFactory:decoderFactory];
-    
-    
+
+
     self.peerConnections = [NSMutableDictionary new];
     self.localStreams = [NSMutableDictionary new];
     self.localTracks = [NSMutableDictionary new];
@@ -79,7 +83,7 @@
     AVAudioSession *session = [AVAudioSession sharedInstance];
 
     [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
     return self;
@@ -110,6 +114,10 @@
             }
             break;
             }
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
+                  [AudioUtils setPreferHeadphoneInput];
+                  break;
+              }
         }
 #endif
 }
@@ -464,10 +472,8 @@
         }
         result(nil);
     } else if ([@"createVideoRenderer" isEqualToString:call.method]){
-        FlutterRTCVideoRenderer* render;
-        render = [self createWithTextureRegistry:_textures
-                                      messenger:_messenger];
-   
+        FlutterRTCVideoRenderer* render = [self createWithTextureRegistry:_textures
+                                          messenger:_messenger];
         self.renders[@(render.textureId)] = render;
         result(@{@"textureId": @(render.textureId)});
     } else if ([@"videoRendererDispose" isEqualToString:call.method]){
@@ -482,7 +488,7 @@
         NSDictionary* argsMap = call.arguments;
         BOOL landscapeMode = [argsMap[@"landscapeMode"] boolValue];
         [self.videoCapturer setLandscapeMode:landscapeMode];
-            
+
         result(nil);
     } else if ([@"videoRendererSetSrcObject" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -509,7 +515,6 @@
                 NSLog(@"Not found video track for RTCMediaStream: %@", streamId);
             }
         }
-        
         [self rendererSetSrcObject:render stream:videoTrack];
         result(nil);
     } else if ([@"mediaStreamTrackHasTorch" isEqualToString:call.method]) {
@@ -544,7 +549,6 @@
     } else if ([@"mediaStreamTrackSwitchCamera" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];
-
         RTCMediaStreamTrack *track = self.localTracks[trackId];
         if (track != nil && [track isKindOfClass:[RTCVideoTrack class]]) {
             RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
@@ -561,7 +565,7 @@
     } else if ([@"mediaStreamChangeZoom" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         CGFloat zoom = [[argsMap objectForKey:@"zoom"] floatValue];
-        
+
         [self mediaStreamChangeZoom:zoom result:result];
     } else if ([@"setVolume" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -647,7 +651,7 @@
                                            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
                                            details:nil]);
         }
-    } else if ([@"addTrack" isEqualToString:call.method]){
+    } else if ([@"addTrack" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSString* peerConnectionId = argsMap[@"peerConnectionId"];
         NSString* trackId = argsMap[@"trackId"];
@@ -674,6 +678,11 @@
             details:nil]);
             return;
         }
+
+        if ([track.kind isEqualToString:@"audio"]) {
+            [AudioUtils ensureAudioSessionWithRecording:YES];
+        }
+
         result([self rtpSenderToMap:sender]);
     } else if ([@"removeTrack" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -708,14 +717,17 @@
             return;
         }
         RTCRtpTransceiver* transceiver = nil;
-        
-        if(trackId != nil) {
+        BOOL hasAudio = NO;
+        if (trackId != nil) {
             RTCMediaStreamTrack *track = [self trackForId:trackId];
             if (transceiverInit != nil) {
                 RTCRtpTransceiverInit *init = [self mapToTransceiverInit:transceiverInit];
                 transceiver = [peerConnection addTransceiverWithTrack:track init:init];
             } else {
                 transceiver = [peerConnection addTransceiverWithTrack:track];
+            }
+            if ([track.kind isEqualToString:@"audio"]) {
+                hasAudio = YES;
             }
         } else if (mediaType != nil) {
              RTCRtpMediaType rtpMediaType = [self stringToRtpMediaType:mediaType];
@@ -724,6 +736,9 @@
                 transceiver = [peerConnection addTransceiverOfType:(rtpMediaType) init:init];
             } else {
                 transceiver = [peerConnection addTransceiverOfType:rtpMediaType];
+            }
+            if (rtpMediaType == RTCRtpMediaTypeAudio) {
+                hasAudio = YES;
             }
         } else {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
@@ -738,7 +753,11 @@
             details:nil]);
             return;
         }
-        
+
+        if (hasAudio) {
+            [AudioUtils ensureAudioSessionWithRecording:YES];
+        }
+
         result([self transceiverToMap:transceiver]);
     } else if ([@"rtpTransceiverSetDirection" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -787,9 +806,9 @@
         if([@"rtpTransceiverGetDirection" isEqualToString:call.method]){
             result(@{@"result": [self transceiverDirectionString:transcevier.direction]});
         } else if ([@"rtpTransceiverGetCurrentDirection" isEqualToString:call.method]) {
-            RTCRtpTransceiverDirection *directionOut = nil;
-            if ([transcevier currentDirection:directionOut]) {
-                result(@{@"result": [self transceiverDirectionString:*directionOut]});
+            RTCRtpTransceiverDirection directionOut = transcevier.direction;
+            if ([transcevier currentDirection:&directionOut]) {
+                result(@{@"result": [self transceiverDirectionString:directionOut]});
             } else  {
                 result(nil);
             }

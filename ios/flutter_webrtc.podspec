@@ -8,15 +8,16 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
 A new flutter plugin project.
                        DESC
-  s.homepage         = 'https://github.com/cr0manty/flutter-webrtc'
+  s.homepage         = 'https://github.com/cloudwebrtc/flutter-webrtc'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'CloudWebRTC' => 'aappland@gmail.com' }
+  s.author           = { 'CloudWebRTC' => 'duanweiwei1982@gmail.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.dependency 'Libyuv', '1703'
-#   s.vendored_frameworks = 'WebRTC.framework'
+# s.vendored_frameworks = 'WebRTC.framework'
+# s.dependency 'WebRTC-SDK', '92.4515.07'
   s.dependency 'GoogleWebRTC', '1.1.31999'
   s.ios.deployment_target = '10.0'
   s.static_framework = true
