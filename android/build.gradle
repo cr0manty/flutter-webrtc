@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
-    implementation 'com.github.webrtc-sdk:android:92.4515.01'
+//    implementation 'com.github.webrtc-sdk:android:92.4515.01'
+    api 'org.webrtc:google-webrtc:1.0.32006'
     implementation "androidx.annotation:annotation:1.1.0"
 }

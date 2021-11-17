@@ -47,7 +47,7 @@ class Helper {
   // trigger focus
   static Future<bool> changeFocus() {
     if (!kIsWeb && !Platform.isAndroid) {
-      return WebRTC.methodChannel().invokeMethod<bool>(
+      return WebRTC.invokeMethod(
         'mediaStreamChangeFocus',
         <String, dynamic>{},
       ).then((value) => value ?? false);
@@ -59,7 +59,7 @@ class Helper {
   // set camera zoom
   static Future<bool> changeZoom(MediaStreamTrack track, double zoom) {
     if (!kIsWeb) {
-      return WebRTC.methodChannel().invokeMethod<bool>(
+      return WebRTC.invokeMethod(
         'mediaStreamChangeZoom',
         <String, dynamic>{
           'zoom': zoom,

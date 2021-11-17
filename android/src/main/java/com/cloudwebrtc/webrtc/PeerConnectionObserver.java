@@ -265,10 +265,10 @@ class PeerConnectionObserver implements PeerConnection.Observer, EventChannel.St
     sendEvent(params);
   }
 
-    @Override
-    public void onStandardizedIceConnectionChange(PeerConnection.IceConnectionState newState) {
-
-    }
+//    @Override
+//    public void onStandardizedIceConnectionChange(PeerConnection.IceConnectionState newState) {
+//
+//    }
 
     @Override
   public void onIceConnectionReceivingChange(boolean var1) {
@@ -452,25 +452,25 @@ class PeerConnectionObserver implements PeerConnection.Observer, EventChannel.St
       sendEvent(params);
   }
 
-    @Override
-    public void onRemoveTrack(RtpReceiver rtpReceiver) {
-        Log.d(TAG, "onRemoveTrack");
-
-        MediaStreamTrack track = rtpReceiver.track();
-        String trackId = track.id();
-        ConstraintsMap trackInfo = new ConstraintsMap();
-        trackInfo.putString("id", trackId);
-        trackInfo.putString("label", track.kind());
-        trackInfo.putString("kind", track.kind());
-        trackInfo.putBoolean("enabled", track.enabled());
-        trackInfo.putString("readyState", track.state().toString());
-        trackInfo.putBoolean("remote", true);
-        ConstraintsMap params = new ConstraintsMap();
-        params.putString("event", "onRemoveTrack");
-        params.putString("trackId", track.id());
-        params.putMap("track", trackInfo.toMap());
-        sendEvent(params);
-    }
+//    @Override
+//    public void onRemoveTrack(RtpReceiver rtpReceiver) {
+//        Log.d(TAG, "onRemoveTrack");
+//
+//        MediaStreamTrack track = rtpReceiver.track();
+//        String trackId = track.id();
+//        ConstraintsMap trackInfo = new ConstraintsMap();
+//        trackInfo.putString("id", trackId);
+//        trackInfo.putString("label", track.kind());
+//        trackInfo.putString("kind", track.kind());
+//        trackInfo.putBoolean("enabled", track.enabled());
+//        trackInfo.putString("readyState", track.state().toString());
+//        trackInfo.putBoolean("remote", true);
+//        ConstraintsMap params = new ConstraintsMap();
+//        params.putString("event", "onRemoveTrack");
+//        params.putString("trackId", track.id());
+//        params.putMap("track", trackInfo.toMap());
+//        sendEvent(params);
+//    }
 
     @Override
   public void onDataChannel(DataChannel dataChannel) {
