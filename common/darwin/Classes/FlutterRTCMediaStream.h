@@ -20,6 +20,10 @@
                           torch:(BOOL) torch
                          result:(FlutterResult) result;
 
+-(void)mediaStreamTrackSwitchDeviceType:(RTCMediaStreamTrack *)track
+                             deviceType: (AVCaptureDeviceType)deviceType
+                                 result:(FlutterResult)result;
+
 -(void)mediaStreamTrackSwitchCamera:(RTCMediaStreamTrack *)track
                              result:(FlutterResult) result;
 
@@ -31,4 +35,8 @@
 -(void)mediaStreamTrackCaptureFrame:(RTCMediaStreamTrack *)track
                              toPath:(NSString *) path
                              result:(FlutterResult) result;
+
+- (BOOL)isDeviceTypeSupportedDeviceForDeviceType:(AVCaptureDeviceType)deviceType;
+
+-(void)mediaStreamTrackCurrentDeviceType:(FlutterResult) result;
 @end

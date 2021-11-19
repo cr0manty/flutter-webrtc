@@ -560,9 +560,28 @@
                 result([FlutterError errorWithCode:[@"Track is class of " stringByAppendingString:[[track class] description]] message:nil details:nil]);
             }
         }
-    } else if ([@"mediaStreamChangeFocus" isEqualToString:call.method]){
+    } else if ([@"mediaStreamTrackSwitchDeviceType" isEqualToString:call.method]){
+        NSDictionary* argsMap = call.arguments;
+        NSString* trackId = argsMap[@"trackId"];
+        NSString* deviceTypeStr = argsMap[@"deviceType"];
+        AVCaptureDeviceType deviceType = [self deviceTypeFromString: deviceTypeStr];
+        
+        RTCMediaStreamTrack *track = self.localTracks[trackId];
+        if (track != nil && [track isKindOfClass:[RTCVideoTrack class]]) {
+            RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
+            [self mediaStreamTrackSwitchDeviceType:videoTrack deviceType: deviceType result:result];
+        } else {
+            if (track == nil) {
+                result([FlutterError errorWithCode:@"Track is nil" message:nil details:nil]);
+            } else {
+                result([FlutterError errorWithCode:[@"Track is class of " stringByAppendingString:[[track class] description]] message:nil details:nil]);
+            }
+        }
+    } else if ([@"mediaStreamTrackCurrentDeviceType" isEqualToString:call.method]){
+        [self mediaStreamTrackCurrentDeviceType:result];
+    }  else if ([@"mediaStreamChangeFocus" isEqualToString:call.method]){
         [self mediaStreamChangeFocus:result];
-    } else if ([@"mediaStreamChangeZoom" isEqualToString:call.method]){
+    }else if ([@"mediaStreamChangeZoom" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         CGFloat zoom = [[argsMap objectForKey:@"zoom"] floatValue];
 
@@ -1656,5 +1675,14 @@
         @"receiver": [self receiverToMap:transceiver.receiver]
     };
     return params;
+}
+
+-(AVCaptureDeviceType) deviceTypeFromString:(NSString*) deviceType {
+    if ([deviceType isEqual: @"AVCaptureDeviceTypeBuiltInTelephotoCamera"]) {
+        return AVCaptureDeviceTypeBuiltInTelephotoCamera;
+    } else if ([deviceType isEqual: @"AVCaptureDeviceTypeBuiltInUltraWideCamera"]) {
+        return AVCaptureDeviceTypeBuiltInUltraWideCamera;
+    }
+    return AVCaptureDeviceTypeBuiltInWideAngleCamera;
 }
 @end

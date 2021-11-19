@@ -118,6 +118,43 @@ class Helper {
     return Future.value(true);
   }
 
+  static Future<bool> switchLens(
+    MediaStreamTrack track,
+    IOSLenses lens,
+  ) async {
+    if (track.kind != 'video') {
+      throw 'The is not a video track => $track';
+    }
+
+    if (kIsWeb) throw UnimplementedError('Only native implementation');
+
+    return WebRTC.invokeMethod(
+      'mediaStreamTrackSwitchDeviceType',
+      <String, dynamic>{
+        'trackId': track.id,
+        'deviceType': iosLensesToString(lens),
+      },
+    ).then((value) => value ?? false);
+  }
+
+  static Future<IOSLenses> currentLens(
+    MediaStreamTrack track,
+  ) async {
+    if (track.kind != 'video') {
+      throw 'The is not a video track => $track';
+    }
+
+    if (kIsWeb) throw UnimplementedError('Only native implementation');
+
+    return WebRTC.invokeMethod(
+      'mediaStreamTrackCurrentDeviceType',
+      <String, dynamic>{
+        'trackId': track.id,
+      },
+    ).then((value) =>
+        value ?? IOSLenses.AVCaptureDeviceTypeBuiltInWideAngleCamera);
+  }
+
   static Future<void> setVolume(double volume, MediaStreamTrack track) async {
     if (track.kind == 'audio') {
       if (kIsWeb) {

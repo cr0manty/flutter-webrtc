@@ -549,6 +549,23 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     result(@([device isTorchModeSupported:AVCaptureTorchModeOn]));
 }
 
+-(void)mediaStreamTrackCurrentDeviceType:(FlutterResult) result
+{
+    if (!self.videoCapturer) {
+        result(@NO);
+        return;
+    }
+    if (self.videoCapturer.captureSession.inputs.count == 0) {
+        result(@NO);
+        return;
+    }
+    
+    AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+    AVCaptureDevice *device = deviceInput.device;
+    
+    result(device.deviceType);
+}
+
 -(void)mediaStreamTrackSetTorch:(RTCMediaStreamTrack *)track torch:(BOOL)torch result:(FlutterResult)result
 {
     if (!self.videoCapturer) {
@@ -596,6 +613,35 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         } else {
             [self.videoCapturer setCameraPosition: position];
             result([NSNumber numberWithBool:self._usingFrontCamera]);
+        }
+    }];
+}
+
+-(void)mediaStreamTrackSwitchDeviceType:(RTCMediaStreamTrack *)track deviceType: (AVCaptureDeviceType)deviceType result:(FlutterResult)result {
+    if (!self.videoCapturer) {
+        NSLog(@"Video capturer is null. Can't switch camera");
+        result(nil);
+        return;
+    }
+    
+    if (self._usingFrontCamera) {
+        result([FlutterError errorWithCode:@"Error while switching device format, can't switch type on front camera" message:@"Error while switching device format" details:nil]);
+        return;
+    }
+    
+    AVCaptureDevice *videoDevice = [AVCaptureDevice defaultDeviceWithDeviceType:deviceType mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
+    
+    if (videoDevice == nil) {
+        result([FlutterError errorWithCode:@"Selected Format is not supported" message:@"Error while switching device format" details:deviceType]);
+        return;
+    }
+    
+    AVCaptureDeviceFormat *selectedFormat = [self selectFormatForDevice:videoDevice];
+    [self.videoCapturer startCaptureWithDevice:videoDevice format:selectedFormat fps:[self selectFpsForFormat:selectedFormat] completionHandler:^(NSError* error){
+        if (error != nil) {
+            result([FlutterError errorWithCode:@"Error while switching device format" message:@"Error while switching device format" details:error]);
+        } else {
+            result(@YES);
         }
     }];
 }
@@ -674,6 +720,17 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         }
     }
     return captureDevices[0];
+}
+
+
+- (BOOL)isDeviceTypeSupportedDeviceForDeviceType:(AVCaptureDeviceType)deviceType {
+    NSArray<AVCaptureDevice *> *captureDevices = [RTCCameraVideoCapturer captureDevices];
+    for (AVCaptureDevice *device in captureDevices) {
+        if (device.deviceType == deviceType) {
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 - (AVCaptureDeviceFormat *)selectFormatForDevice:(AVCaptureDevice *)device {

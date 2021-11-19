@@ -55,6 +55,12 @@ enum RTCRtpMediaType {
   RTCRtpMediaTypeData,
 }
 
+enum IOSLenses {
+  AVCaptureDeviceTypeBuiltInTelephotoCamera,
+  AVCaptureDeviceTypeBuiltInUltraWideCamera,
+  AVCaptureDeviceTypeBuiltInWideAngleCamera,
+}
+
 final typeRTCRtpMediaTypetoString = <RTCRtpMediaType, String>{
   RTCRtpMediaType.RTCRtpMediaTypeAudio: 'audio',
   RTCRtpMediaType.RTCRtpMediaTypeVideo: 'video',
@@ -171,4 +177,26 @@ RTCPeerConnectionState peerConnectionStateForString(String? state) {
   }
 
   return RTCPeerConnectionState.RTCPeerConnectionStateClosed;
+}
+
+String iosLensesToString(IOSLenses lens) {
+  switch (lens) {
+    case IOSLenses.AVCaptureDeviceTypeBuiltInTelephotoCamera:
+      return 'AVCaptureDeviceTypeBuiltInTelephotoCamera';
+    case IOSLenses.AVCaptureDeviceTypeBuiltInUltraWideCamera:
+      return 'AVCaptureDeviceTypeBuiltInUltraWideCamera';
+    default:
+      return 'AVCaptureDeviceTypeBuiltInWideAngleCamera';
+  }
+}
+
+IOSLenses stringToIosLenses(String lens) {
+  switch (lens) {
+    case 'AVCaptureDeviceTypeBuiltInTelephotoCamera':
+      return IOSLenses.AVCaptureDeviceTypeBuiltInTelephotoCamera;
+    case 'AVCaptureDeviceTypeBuiltInUltraWideCamera':
+      return IOSLenses.AVCaptureDeviceTypeBuiltInUltraWideCamera;
+    default:
+      return IOSLenses.AVCaptureDeviceTypeBuiltInWideAngleCamera;
+  }
 }
