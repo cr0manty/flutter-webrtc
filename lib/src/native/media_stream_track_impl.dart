@@ -67,6 +67,18 @@ class MediaStreamTrackNative extends MediaStreamTrack {
   Future<bool> switchCamera() => Helper.switchCamera(
         this,
       );
+  @override
+  bool get isZoomSupported => true;
+
+  @override
+  Future<bool> setZoom(double zoom) =>
+      WebRTC.methodChannel().invokeMethod<bool>(
+        'mediaStreamChangeZoom',
+        <String, dynamic>{
+          'zoom': zoom,
+          'trackId': id,
+        },
+      ).then((value) => value ?? false);
 
   @override
   void enableSpeakerphone(bool enable) async {

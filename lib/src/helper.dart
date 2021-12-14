@@ -57,19 +57,13 @@ class Helper {
   }
 
   // set camera zoom
-  static Future<bool> changeZoom(MediaStreamTrack track, double zoom) {
-    if (!kIsWeb) {
-      return WebRTC.methodChannel().invokeMethod<bool>(
-        'mediaStreamChangeZoom',
-        <String, dynamic>{
-          'zoom': zoom,
-          'trackId': track.id,
-        },
-      ).then((value) => value ?? false);
-    }
-
-    return Future.value(false);
-  }
+  static Future<bool> changeZoom(
+    MediaStreamTrack track,
+    double zoom,
+  ) =>
+      track.setZoom(
+        zoom,
+      );
 
   /// For web implementation, make sure to pass the target deviceId
   static Future<bool> switchCamera(

@@ -95,16 +95,7 @@
     NSDictionary *interuptionDict = notification.userInfo;
     NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
 
-    AVAudioSessionRouteDescription *routeDescription = [notification.userInfo valueForKey:AVAudioSessionRouteChangePreviousRouteKey];
-
-    NSLog(@"Route change:");
     switch (routeChangeReason) {
-        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
-            NSLog(@"     NewDeviceAvailable");
-            break;
-        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
-            NSLog(@"     OldDeviceUnavailable");
-            break;
         case AVAudioSessionRouteChangeReasonCategoryChange: {
             AVAudioSession *session = [AVAudioSession sharedInstance];
             if ([session category] != AVAudioSessionCategoryMultiRoute) {
@@ -121,27 +112,9 @@
             if(error != nil) {
                 NSLog(@"setCategoryError: %@", error);
             }
-            NSLog(@"     CategoryChange");
-            NSLog(@" New Category: %@", [[AVAudioSession sharedInstance] category]);
             break;
             }
-        case AVAudioSessionRouteChangeReasonOverride:
-            NSLog(@"     Override");
-            break;
-        case AVAudioSessionRouteChangeReasonWakeFromSleep:
-            NSLog(@"     WakeFromSleep");
-            break;
-        case AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory:
-            NSLog(@"     NoSuitableRouteForCategory");
-            break;
-        default:
-            NSLog(@"     ReasonUnknown");
         }
-
-    NSLog(@"Previous route:\n");
-    NSLog(@"%@\n", routeDescription);
-    NSLog(@"Current route:\n");
-    NSLog(@"%@\n", [AVAudioSession sharedInstance].currentRoute);
 #endif
 }
 

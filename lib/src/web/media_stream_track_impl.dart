@@ -96,6 +96,29 @@ class MediaStreamTrackWeb extends MediaStreamTrack {
   }
 
   @override
+  bool get isZoomSupported {
+    final settings = getSettings();
+
+    return settings.containsKey('zoom');
+  }
+
+  @override
+  Future<bool> setZoom(double zoom) async {
+    if (!isZoomSupported) return false;
+
+    final zoomConstrains = {
+      'advanced': [
+        {
+          'zoom': zoom,
+        },
+      ],
+    };
+    await applyConstraints(zoomConstrains);
+
+    return true;
+  }
+
+  @override
   Future<void> setTorch(bool torch) {
     throw UnimplementedError('The web implementation does not support torch');
   }
