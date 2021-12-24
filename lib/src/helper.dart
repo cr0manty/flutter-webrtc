@@ -56,15 +56,6 @@ class Helper {
     return Future.value(false);
   }
 
-  // set camera zoom
-  static Future<bool> changeZoom(
-    MediaStreamTrack track,
-    double zoom,
-  ) =>
-      track.setZoom(
-        zoom,
-      );
-
   /// For web implementation, make sure to pass the target deviceId
   static Future<bool> switchCamera(
     MediaStreamTrack track, {

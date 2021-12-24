@@ -7,6 +7,7 @@
 #import "FlutterRTCPeerConnection.h"
 #import "FlutterRTCVideoRenderer.h"
 #import "FlutterRTCCameraVideoCapturer.h"
+#import "FlutterRTCHelper.h"
 
 #if TARGET_OS_IPHONE
 #import "FlutterRPScreenRecorder.h"
@@ -26,6 +27,7 @@
 @end
 
 @implementation  FlutterWebRTCPlugin (RTCMediaStream)
+
 
 /**
  * {@link https://www.w3.org/TR/mediacapture-streams/#navigatorusermediaerrorcallback}
@@ -620,31 +622,6 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         
         if (error) {
             result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:error]);
-        }
-    }
-}
-
--(void)mediaStreamChangeZoom:(CGFloat)zoom result:(FlutterResult)result
-{
-    if (!self.videoCapturer) {
-        NSLog(@"Video capturer is null. Can't change focus");
-        return;
-    }
-    AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
-    AVCaptureDevice *videoDevice = deviceInput.device;
-    
-    if (videoDevice) {
-        NSError *error;
-        if([videoDevice lockForConfiguration:&error]) {
-            [videoDevice setVideoZoomFactor:zoom];
-            [videoDevice unlockForConfiguration];
-            result([NSNumber numberWithBool:TRUE]);
-        } else {
-            result([FlutterError errorWithCode:@"Error while changing zoom" message:@"Error while changing zoom" details:error]);
-        }
-        
-        if (error) {
-            result([FlutterError errorWithCode:@"Error while changing zoom" message:@"Error while changing zoom" details:error]);
         }
     }
 }

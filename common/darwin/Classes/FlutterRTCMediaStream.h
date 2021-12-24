@@ -25,9 +25,6 @@
 
 -(void)mediaStreamChangeFocus:(FlutterResult)result;
 
--(void)mediaStreamChangeZoom:(CGFloat)zoom
-                            result:(FlutterResult)result;
-
 -(void)mediaStreamTrackCaptureFrame:(RTCMediaStreamTrack *)track
                              toPath:(NSString *) path
                              result:(FlutterResult) result;

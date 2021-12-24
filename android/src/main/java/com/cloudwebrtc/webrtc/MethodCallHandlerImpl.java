@@ -190,7 +190,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       case "getSources":
         getSources(result);
         break;
-      case "mediaStreamChangeZoom":
+      case "#VideoHelper/changeZoom":
         String cameraTrackID = call.argument("trackId");
         double zoom = call.argument("zoom");
         getUserMediaImpl.changeZoom(cameraTrackID, zoom, result);
