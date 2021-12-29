@@ -45,4 +45,6 @@ extension AVCaptureDeviceTypeExtension on AVCaptureDeviceType {
         return AVCaptureDeviceType.wide_angle;
     }
   }
+
+  bool get isDefaultCamera => this == AVCaptureDeviceType.wide_angle;
 }

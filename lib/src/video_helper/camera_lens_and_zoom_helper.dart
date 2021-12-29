@@ -101,11 +101,4 @@ class CameraLensAndZoomHelper extends BaseVideoHelper {
 
     return result ?? 1.0;
   }
-
-  /// focus
-
-  /// white balance
-
-  /// change exposure
-
 }
