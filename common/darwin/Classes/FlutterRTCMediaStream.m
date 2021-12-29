@@ -311,7 +311,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     
     if (_videoDevice) {
         NSError *error;
-        if([_videoDevice lockForConfiguration:&error]) {
+        if([_videoDevice isFocusModeSupported:AVCaptureFocusModeAutoFocus] &&[_videoDevice lockForConfiguration:&error]) {
             [_videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
             [_videoDevice unlockForConfiguration];
         }
