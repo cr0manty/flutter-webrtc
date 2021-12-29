@@ -11,6 +11,15 @@ class WhiteBalanceGains {
         blueGain: 1,
       );
 
+  factory WhiteBalanceGains.fromJson(
+    Map<dynamic, dynamic> json,
+  ) =>
+      WhiteBalanceGains(
+        redGain: json['redGain']!,
+        greenGain: json['greenGain']!,
+        blueGain: json['blueGain']!,
+      );
+
   final double redGain;
   final double greenGain;
   final double blueGain;
@@ -35,6 +44,14 @@ class TemperatureAndTintWhiteBalanceGains {
       TemperatureAndTintWhiteBalanceGains(
         temperature: 1,
         tint: 1,
+      );
+
+  factory TemperatureAndTintWhiteBalanceGains.fromJson(
+    Map<dynamic, dynamic> json,
+  ) =>
+      TemperatureAndTintWhiteBalanceGains(
+        temperature: json['temperature']!,
+        tint: json['tint']!,
       );
 
   final double temperature;

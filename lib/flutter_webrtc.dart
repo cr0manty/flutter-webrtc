@@ -17,7 +17,6 @@ export 'src/interface/rtc_rtp_transceiver.dart';
 export 'src/interface/rtc_session_description.dart';
 export 'src/interface/rtc_stats_report.dart';
 export 'src/interface/rtc_track_event.dart';
-export 'src/interface/white_balance_gains.dart';
 export 'src/media_devices.dart';
 export 'src/media_recorder.dart';
 export 'src/native/rtc_peerconnection_factory.dart'
@@ -26,5 +25,10 @@ export 'src/native/rtc_video_view_impl.dart'
     if (dart.library.html) 'src/web/rtc_video_view_impl.dart';
 export 'src/native/utils.dart' if (dart.library.html) 'src/web/utils.dart';
 export 'src/rtc_video_renderer.dart';
-export 'src/video_helper/enums.dart';
-export 'src/video_helper/video_helper.dart';
+export 'src/video_helper/base/enums.dart';
+export 'src/video_helper/camera_lens_and_zoom_helper.dart';
+export 'src/video_helper/exposure_helper.dart';
+export 'src/video_helper/focus_helper.dart';
+export 'src/video_helper/models/exposure.dart';
+export 'src/video_helper/models/white_balance_gains.dart';
+export 'src/video_helper/white_balance_helper.dart';

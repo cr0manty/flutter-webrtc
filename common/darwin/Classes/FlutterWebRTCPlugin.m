@@ -4,7 +4,11 @@
 #import "FlutterRTCDataChannel.h"
 #import "FlutterRTCVideoRenderer.h"
 #import "FlutterRTCCameraVideoCapturer.h"
-#import "FlutterRTCHelper.h"
+#import "CameraLensAndZoomHelper.h"
+#import "WhiteBalanceHelper.h"
+#import "ExposureHelper.h"
+#import "FocusHelper.h"
+#import "FlutterDataHandler.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <WebRTC/WebRTC.h>
@@ -17,7 +21,10 @@
 #pragma clang diagnostic pop
     
     FlutterMethodChannel *_methodChannel;
-    VideoHelper *_helper;
+    WhiteBalanceHelper *_whiteBalanceHelper;
+    CameraLensAndZoomHelper *_zoomHelper;
+    ExposureHelper *_exposureHelper;
+    FocusHelper *_focusHelper;
     id _registry;
     id _messenger;
     id _textures;
@@ -42,6 +49,9 @@
 #endif
                                                                     withTextures:[registrar textures]];
     [registrar addMethodCallDelegate:instance channel:channel];
+    [WhiteBalanceHelper registerAdditionalHandlers:registrar instance:instance];
+    [FocusHelper registerAdditionalHandlers:registrar instance:instance];
+    [ExposureHelper registerAdditionalHandlers:registrar instance:instance];
 }
 
 - (instancetype)initWithChannel:(FlutterMethodChannel *)channel
@@ -60,7 +70,11 @@
         _textures = textures;
         _messenger = messenger;
         _speakerOn = NO;
-        _helper = [VideoHelper new];
+         
+        _whiteBalanceHelper = [WhiteBalanceHelper new];
+        _zoomHelper = [CameraLensAndZoomHelper new];
+        _focusHelper = [FocusHelper new];
+        _exposureHelper = [ExposureHelper new];
 #if TARGET_OS_IPHONE
         self.viewController = viewController;
 #endif
@@ -128,7 +142,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper isFocusModeSupported:device modeNum:[mode intValue]];
+            BOOL helpResult = [_focusHelper isFocusModeSupported:device modeNum:[mode intValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/setFocusMode" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -136,7 +150,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper setWhiteBalanceMode:device modeNum:[mode intValue]];
+            BOOL helpResult = [_focusHelper setFocusMode: device modeNum:[mode intValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/setFocusPoint" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -147,7 +161,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper setFocusPoint:device point:point];
+            BOOL helpResult = [_focusHelper setFocusPoint:device point:point];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/isWhiteBalanceModeSupported" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -155,7 +169,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper isWhiteBalanceModeSupported:device modeNum:[mode intValue]];
+            BOOL helpResult = [_whiteBalanceHelper isWhiteBalanceModeSupported:device modeNum:[mode intValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/setWhiteBalanceMode" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -163,7 +177,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper setWhiteBalanceMode:device modeNum:[mode intValue]];
+            BOOL helpResult = [_whiteBalanceHelper setWhiteBalanceMode:device modeNum:[mode intValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/setWhiteBalanceGains" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -175,7 +189,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper setWhiteBalance:device gains:gains];
+            BOOL helpResult = [_whiteBalanceHelper setWhiteBalance:device gains:gains];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/changeWhiteBalanceTemperatureAndTint" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -185,7 +199,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper changeWhiteBalanceTemperature:device temperature:[temperature floatValue] tint:[tint floatValue]];
+            BOOL helpResult = [_whiteBalanceHelper changeWhiteBalanceTemperature:device temperature:[temperature floatValue] tint:[tint floatValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/isExposureModeSupported" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -193,7 +207,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper isExposureModeSupported:device modeNum:[mode intValue]];
+            BOOL helpResult = [_exposureHelper isExposureModeSupported:device modeNum:[mode intValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/setExposureMode" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -201,7 +215,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper setExposureMode:device modeNum:[mode intValue]];
+            BOOL helpResult = [_exposureHelper setExposureMode:device modeNum:[mode intValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/changeISO" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -209,7 +223,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper changeISO:device value:[vlue floatValue]];
+            BOOL helpResult = [_exposureHelper changeISO:device value:[vlue floatValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/changeBias" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -217,7 +231,7 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper changeBias:device value:[vlue floatValue]];
+            BOOL helpResult = [_exposureHelper changeBias:device value:[vlue floatValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/changeExposureDuration" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -225,73 +239,73 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL helpResult = [_helper changeExposureDuration:device value:[vlue floatValue]];
+            BOOL helpResult = [_exposureHelper changeExposureDuration:device value:[vlue floatValue]];
             result([NSNumber numberWithBool:helpResult]);
         } else if ([@"#VideoHelper/getMaxBalanceGains" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            float helpResult = [_helper getMaxBalanceGains:device];
+            float helpResult = [_whiteBalanceHelper getMaxBalanceGains:device];
             result([NSNumber numberWithFloat: helpResult]);
         } else if ([@"#VideoHelper/getCurrentBalanceGains" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            AVCaptureWhiteBalanceGains gains = [_helper getCurrentBalanceGains:device];
+            AVCaptureWhiteBalanceGains gains = [_whiteBalanceHelper getCurrentBalanceGains:device];
             result(@{@"redGain": [NSNumber numberWithFloat: gains.redGain], @"blueGain": [NSNumber numberWithFloat: gains.blueGain], @"greenGain": [NSNumber numberWithFloat: gains.greenGain]});
         } else if ([@"#VideoHelper/getCurrentTemperatureBalanceGains" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            AVCaptureWhiteBalanceTemperatureAndTintValues gains = [_helper getCurrentTemperatureBalanceGains:device];
+            AVCaptureWhiteBalanceTemperatureAndTintValues gains = [_whiteBalanceHelper getCurrentTemperatureBalanceGains:device];
             result(@{@"tint": [NSNumber numberWithFloat: gains.tint], @"temperature": [NSNumber numberWithFloat: gains.temperature]});
         } else if ([@"#VideoHelper/lockWithGrayWorld" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL isDone = [_helper lockWithGrayWorld:device];
+            BOOL isDone = [_whiteBalanceHelper lockWithGrayWorld:device];
             result([NSNumber numberWithBool:isDone]);
         } else if ([@"#VideoHelper/getWhiteBalanceMode" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            AVCaptureWhiteBalanceMode mode = [_helper getWhiteBalanceMode:device];
+            AVCaptureWhiteBalanceMode mode = [_whiteBalanceHelper getWhiteBalanceMode:device];
             result(@(mode));
         } else if ([@"#VideoHelper/getMaxZoomFactor" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            float zoom = [_helper getMaxZoomFactor:device];
+            float zoom = [_zoomHelper getMaxZoomFactor:device];
             result([NSNumber numberWithFloat:zoom]);
         } else if ([@"#VideoHelper/getMinZoomFactor" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            float zoom = [_helper getMinZoomFactor:device];
+            float zoom = [_zoomHelper getMinZoomFactor:device];
             result([NSNumber numberWithFloat:zoom]);
         } else if ([@"#VideoHelper/getMinZoomFactor" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            float zoom = [_helper getMinZoomFactor:device];
+            float zoom = [_zoomHelper getMinZoomFactor:device];
             result([NSNumber numberWithFloat:zoom]);
         } else if ([@"#VideoHelper/getZoomFactor" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            float zoom = [_helper getZoomFactor:device];
+            float zoom = [_zoomHelper getZoomFactor:device];
             result([NSNumber numberWithFloat:zoom]);
         } else if ([@"#VideoHelper/getFocusMode" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            AVCaptureFocusMode value = [_helper getFocusMode:device];
+            AVCaptureFocusMode value = [_focusHelper getFocusMode:device];
             result(@(value));
         } else if ([@"#VideoHelper/getFocusPointLockedWithLensPosition" isEqualToString:call.method]) {
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            float value = [_helper getFocusPointLocked:device];
+            float value = [_focusHelper getFocusPointLocked:device];
             result([NSNumber numberWithFloat:value]);
         } else if ([@"#VideoHelper/setFocusPointLockedWithLensPosition" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
@@ -299,16 +313,157 @@
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL value = [_helper setFocusPointLocked:device lensPosition:[position floatValue]];
+            BOOL value = [_focusHelper setFocusPointLocked:device lensPosition:[position floatValue]];
             result([NSNumber numberWithBool:value]);
         } else if ([@"#VideoHelper/changeZoom" isEqualToString:call.method]) {
             NSDictionary* argsMap = call.arguments;
-            NSNumber *zoom = argsMap[@"zoom"];
+            float zoom = [argsMap[@"zoom"] floatValue];
             AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
             AVCaptureDevice *device = deviceInput.device;
             
-            BOOL value = [_helper setZoom:device zoom:[zoom floatValue]];
-            result([NSNumber numberWithBool:value]);
+            if ([_zoomHelper canSwitchToUltraWideCamera:device zoom:zoom]) {
+                device = [_zoomHelper getUltraWideCamera];
+                [self mediaStreamTrackChangeCamera: device result:result];
+            } else {
+                BOOL value = [_zoomHelper setZoom:device zoom:zoom];
+                result([NSNumber numberWithBool:value]);
+            }
+        } else if ([@"#VideoHelper/convertDeviceGainsToTemperature" isEqualToString:call.method]) {
+            NSDictionary* argsMap = call.arguments;
+            AVCaptureWhiteBalanceGains deviceGains;
+            deviceGains.greenGain = [argsMap[@"greenGain"] floatValue];
+            deviceGains.redGain = [argsMap[@"redGain"] floatValue];
+            deviceGains.blueGain = [argsMap[@"blueGain"] floatValue];
+            
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            AVCaptureWhiteBalanceTemperatureAndTintValues gains = [device temperatureAndTintValuesForDeviceWhiteBalanceGains:deviceGains];
+            result(@{@"tint": [NSNumber numberWithFloat: gains.tint], @"temperature": [NSNumber numberWithFloat: gains.temperature]});
+        } else if ([@"#VideoHelper/getISO" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            float value = [_exposureHelper getISO:device];
+            result([NSNumber numberWithFloat:value]);
+        } else if ([@"#VideoHelper/getExposureTargetBias" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            float value = [_exposureHelper getExposureTargetBias:device];
+            result([NSNumber numberWithFloat:value]);
+        } else if ([@"#VideoHelper/getMaxExposureTargetBias" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            float value = [_exposureHelper getMaxExposureTargetBias:device];
+            result([NSNumber numberWithFloat:value]);
+        } else if ([@"#VideoHelper/getMinExposureTargetBias" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            float value = [_exposureHelper getMinExposureTargetBias:device];
+            result([NSNumber numberWithFloat:value]);
+        } else if ([@"#VideoHelper/getExposureDuration" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            CMTime value = [_exposureHelper getExposureDuration:device];
+            float seconds = CMTimeGetSeconds(value);
+            
+            result(@{@"value": [NSNumber numberWithInteger:value.value], @"timescale": [NSNumber numberWithInteger:value.timescale], @"seconds": [NSNumber numberWithFloat:seconds]});
+        } else if ([@"#VideoHelper/getMinISO" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            float value = [_exposureHelper getMinISO:device];
+            result([NSNumber numberWithFloat:value]);
+        } else if ([@"#VideoHelper/getMaxISO" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            float value = [_exposureHelper getMaxISO:device];
+            result([NSNumber numberWithFloat:value]);
+        } else if ([@"#VideoHelper/getExposureTargetOffset" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            float value = [_exposureHelper getExposureTargetOffset:device];
+            result([NSNumber numberWithFloat:value]);
+        } else if ([@"#VideoHelper/getExposureMode" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            AVCaptureExposureMode value = [_exposureHelper getExposureMode:device];
+            result(@(value));
+        } else if ([@"#VideoHelper/maxExposureDuration" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            CMTime value = [_exposureHelper minExposureDuration:device];
+            float seconds = CMTimeGetSeconds(value);
+            
+            result(@{@"value": [NSNumber numberWithInteger:value.value], @"timescale": [NSNumber numberWithInteger:value.timescale], @"seconds": [NSNumber numberWithFloat:seconds]});
+        } else if ([@"#VideoHelper/minExposureDuration" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            CMTime value = [_exposureHelper minExposureDuration:device];
+
+            float seconds = CMTimeGetSeconds(value);
+            
+            result(@{@"value": [NSNumber numberWithInteger:value.value], @"timescale": [NSNumber numberWithInteger:value.timescale], @"seconds": [NSNumber numberWithFloat:seconds]});
+        } else if ([@"#VideoHelper/getExposureDurationSeconds" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            NSDictionary *value = [_exposureHelper getExposureDurationSeconds:device];
+            
+            result(value);
+        } else if ([@"#VideoHelper/getSupportedCameraLens" isEqualToString:call.method]) {
+            NSArray *value = [_zoomHelper getSupportedCameraLens];
+            result(value);
+        } else if ([@"#VideoHelper/getSupportedFocusMode" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            NSArray *value = [_focusHelper getSupportedFocusMode:device];
+            
+            result(value);
+        } else if ([@"#VideoHelper/getSupportedExposureMode" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            NSArray *value = [_exposureHelper getSupportedExposureMode:device];
+            
+            result(value);
+        } else if ([@"#VideoHelper/getSupportedWhiteBalanceMode" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            NSArray *value = [_whiteBalanceHelper getSupportedWhiteBalanceMode:device];
+            
+            result(value);
+        } else if ([@"#VideoHelper/getCurrentDeviceType" isEqualToString:call.method]) {
+            AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+            AVCaptureDevice *device = deviceInput.device;
+            
+            AVCaptureDeviceType value = [_zoomHelper getCurrentDeviceType:device];
+            
+            result(value);
+        } else if ([@"#VideoHelper/setCameraByName" isEqualToString:call.method]) {
+            NSDictionary* argsMap = call.arguments;
+            NSString* name = argsMap[@"nativeName"];
+            
+            AVCaptureDevice *device = [_zoomHelper getCameraByName:name];
+            
+            if (device) {
+                [self mediaStreamTrackChangeCamera: device result:result];
+            } else {
+                result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@ Failed", call.method]
+                                           message:[NSString stringWithFormat:@"%@ deviceType is not available for AVCaptureDevice", name]
+                                           details:nil]);
+            }
         } else {
             result(FlutterMethodNotImplemented);
         }
@@ -757,7 +912,7 @@
         RTCMediaStreamTrack *track = self.localTracks[trackId];
         if (track != nil && [track isKindOfClass:[RTCVideoTrack class]]) {
             RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
-            [self mediaStreamTrackSwitchCamera:videoTrack result:result];
+            [self mediaStreamTrackSwitchCamera:result];
         } else {
             if (track == nil) {
                 result([FlutterError errorWithCode:@"Track is nil" message:nil details:nil]);
