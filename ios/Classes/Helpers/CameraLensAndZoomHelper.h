@@ -29,6 +29,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(AVCaptureDeviceType)getCurrentDeviceType:(AVCaptureDevice*)device;
 
+-(BOOL)setPreferredStabilizationMode:(AVCaptureConnection*)connection
+                             modeNum:(NSInteger)modeNum;
+
+-(AVCaptureVideoStabilizationMode)getPreferredStabilizationMode:(AVCaptureConnection*)connection;
+
+-(AVCaptureVideoStabilizationMode)getActiveStabilizationMode:(AVCaptureConnection*)connection;
+
+-(NSArray*)getSupportedStabilizationMode;
+
 #pragma mark - zoom
 
 -(BOOL)setZoom:(AVCaptureDevice*)device

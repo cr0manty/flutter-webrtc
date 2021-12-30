@@ -23,6 +23,14 @@ enum AVCaptureDeviceType {
   telephoto,
 }
 
+enum AVCaptureVideoStabilizationMode {
+  off,
+  standard,
+  cinematic,
+  cinematic_extended,
+  auto,
+}
+
 extension AVCaptureDeviceTypeExtension on AVCaptureDeviceType {
   String get nativeName {
     switch (this) {
@@ -47,4 +55,43 @@ extension AVCaptureDeviceTypeExtension on AVCaptureDeviceType {
   }
 
   bool get isDefaultCamera => this == AVCaptureDeviceType.wide_angle;
+}
+
+extension AVCaptureVideoStabilizationModeExtension
+    on AVCaptureVideoStabilizationMode {
+  int get value {
+    switch (this) {
+      case AVCaptureVideoStabilizationMode.auto:
+        return -1;
+      case AVCaptureVideoStabilizationMode.off:
+        return 0;
+      case AVCaptureVideoStabilizationMode.standard:
+        return 1;
+      case AVCaptureVideoStabilizationMode.cinematic:
+        return 2;
+      case AVCaptureVideoStabilizationMode.cinematic_extended:
+        return 3;
+    }
+  }
+
+  static AVCaptureVideoStabilizationMode typeByValue(int value) {
+    assert(
+      value >= -1 && value <= 3,
+      'Unsupported AVCaptureVideoStabilizationMode',
+    );
+
+    switch (value) {
+      case -1:
+        return AVCaptureVideoStabilizationMode.auto;
+      case 0:
+        return AVCaptureVideoStabilizationMode.off;
+      case 1:
+        return AVCaptureVideoStabilizationMode.standard;
+      case 2:
+        return AVCaptureVideoStabilizationMode.cinematic;
+      case 3:
+        return AVCaptureVideoStabilizationMode.cinematic_extended;
+    }
+    return AVCaptureVideoStabilizationMode.off;
+  }
 }

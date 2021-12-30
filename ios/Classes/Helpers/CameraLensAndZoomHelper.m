@@ -109,6 +109,52 @@
     return device.deviceType;
 }
 
+-(BOOL)setPreferredStabilizationMode:(AVCaptureConnection*)connection
+                    modeNum:(NSInteger)modeNum {
+    if (![connection isVideoStabilizationSupported]) {
+        return FALSE;
+    }
+    
+    AVCaptureVideoStabilizationMode mode = (AVCaptureVideoStabilizationMode)modeNum;
+    [connection setPreferredVideoStabilizationMode:mode];
+    
+    return TRUE;
+}
+
+-(AVCaptureVideoStabilizationMode)getPreferredStabilizationMode:(AVCaptureConnection*)connection {
+    return [connection preferredVideoStabilizationMode];
+}
+
+-(AVCaptureVideoStabilizationMode)getActiveStabilizationMode:(AVCaptureConnection*)connection {
+    return [connection activeVideoStabilizationMode];
+}
+
+-(BOOL)setStabilizationMode:(AVCaptureConnection*)connection
+                    modeNum:(NSInteger)modeNum{
+    if (![connection isVideoStabilizationSupported]) {
+        return FALSE;
+    }
+    AVCaptureVideoStabilizationMode mode = (AVCaptureVideoStabilizationMode)modeNum;
+    [connection setPreferredVideoStabilizationMode:mode];
+
+    
+    return TRUE;
+}
+
+-(NSArray*)getSupportedStabilizationMode {
+    NSMutableArray *array = [[NSMutableArray alloc] init];
+    
+    [array addObject:[NSNumber numberWithInteger:AVCaptureVideoStabilizationModeOff]];
+    [array addObject:[NSNumber numberWithInteger:AVCaptureVideoStabilizationModeStandard]];
+    [array addObject:[NSNumber numberWithInteger:AVCaptureVideoStabilizationModeCinematic]];
+    [array addObject:[NSNumber numberWithInteger:AVCaptureVideoStabilizationModeAuto]];
+    
+    if (@available(iOS 13.0, *)) {
+        [array addObject:[NSNumber numberWithInteger:AVCaptureVideoStabilizationModeCinematicExtended]];
+    }
+    return array;
+}
+
 #pragma mark - set zoom
 
 -(BOOL)setZoom:(AVCaptureDevice*)device

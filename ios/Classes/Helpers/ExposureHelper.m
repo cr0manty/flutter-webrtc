@@ -175,6 +175,10 @@ __const float kExposureMinimumDuration = 1.0/1000;
 -(BOOL)changeExposureDuration:(AVCaptureDevice*)device
                          value:(float)value {
     
+    if (device.deviceType == AVCaptureDeviceTypeBuiltInTelephotoCamera) {
+        return FALSE;
+    }
+    
     float p = pow(value, kExposureDurationPower); // Apply power function to expand slider's low-end range
     float minDurationSeconds = MAX(CMTimeGetSeconds(device.activeFormat.minExposureDuration), kExposureMinimumDuration);
     float maxDurationSeconds = CMTimeGetSeconds(device.activeFormat.maxExposureDuration);
