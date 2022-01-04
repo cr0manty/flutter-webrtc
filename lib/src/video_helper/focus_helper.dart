@@ -113,6 +113,14 @@ class FocusHelper extends BaseVideoHelper {
   Future<bool> setFocusPointLockedWithLensPosition(double value) async {
     supportedPlatforms();
 
+    final isSupported = await isLockingFocusWithCustomLensPositionSupported();
+
+    if (!isSupported) {
+      throw 'setFocusPointLockedWithLensPosition is not supported on this device '
+          'use [isLockingFocusWithCustomLensPositionSupported] to check is Lens Position Supported '
+          'on this device';
+    }
+
     final result = await channel.invokeMethod<bool>(
       '#VideoHelper/setFocusPointLockedWithLensPosition',
       {
