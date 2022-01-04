@@ -42,6 +42,10 @@
     return [device isFocusModeSupported:mode];
 }
 
+-(BOOL)isLockingFocusWithCustomLensPositionSupported:(AVCaptureDevice*)device {
+    return [device isLockingFocusWithCustomLensPositionSupported];
+}
+
 -(NSArray*)getSupportedFocusMode:(AVCaptureDevice*)device {
     NSMutableArray *array = [[NSMutableArray alloc] init];
     

@@ -22,6 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 -(BOOL)isFocusModeSupported:(AVCaptureDevice*)device
                     modeNum:(NSInteger)modeNum;
 
+-(BOOL)isLockingFocusWithCustomLensPositionSupported:(AVCaptureDevice*)device;
+
 -(AVCaptureFocusMode)getFocusMode:(AVCaptureDevice*)device;
 
 -(NSArray*)getSupportedFocusMode:(AVCaptureDevice*)device;

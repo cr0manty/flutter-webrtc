@@ -51,6 +51,15 @@ class FocusHelper extends BaseVideoHelper {
     return result ?? false;
   }
 
+  Future<bool> isLockingFocusWithCustomLensPositionSupported() async {
+    supportedPlatforms();
+
+    final result = await channel.invokeMethod<bool>(
+      '#VideoHelper/isLockingFocusWithCustomLensPositionSupported',
+    );
+    return result ?? false;
+  }
+
   Future<bool> setFocusMode(
     AVCaptureFocusMode mode,
   ) async {

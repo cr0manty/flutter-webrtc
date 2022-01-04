@@ -505,6 +505,13 @@
         BOOL value = [_whiteBalanceHelper isWhiteBalanceLockSupported:device];
         
         result([NSNumber numberWithBool:value]);
+    } else if ([@"#VideoHelper/isLockingFocusWithCustomLensPositionSupported" isEqualToString:call.method]) {
+        AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+        AVCaptureDevice *device = deviceInput.device;
+        
+        BOOL value = [_focusHelper isLockingFocusWithCustomLensPositionSupported:device];
+        
+        result([NSNumber numberWithBool:value]);
     } else {
         result(FlutterMethodNotImplemented);
     }
