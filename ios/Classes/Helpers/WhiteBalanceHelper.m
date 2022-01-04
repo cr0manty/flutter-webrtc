@@ -39,6 +39,10 @@
     return [device whiteBalanceMode];
 }
 
+-(BOOL)isWhiteBalanceLockSupported:(AVCaptureDevice*)device {
+    return [device isLockingWhiteBalanceWithCustomDeviceGainsSupported];
+}
+
 -(NSArray*)getSupportedWhiteBalanceMode:(AVCaptureDevice*)device {
     NSMutableArray *array = [[NSMutableArray alloc] init];
     

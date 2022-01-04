@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 -(BOOL)isWhiteBalanceModeSupported:(AVCaptureDevice*)device
                            modeNum:(NSInteger)modeNum;
 
+-(BOOL)isWhiteBalanceLockSupported:(AVCaptureDevice*)device;
+
 -(BOOL)setWhiteBalanceMode:(AVCaptureDevice*)device
                    modeNum:(NSInteger)modeNum;
 

@@ -101,4 +101,72 @@ class CameraLensAndZoomHelper extends BaseVideoHelper {
 
     return result ?? 1.0;
   }
+
+  Future<List<AVCaptureVideoStabilizationMode>>
+      getSupportedStabilizationMode() async {
+    supportedPlatforms();
+
+    final result = await channel.invokeMethod<List>(
+      '#VideoHelper/getSupportedStabilizationMode',
+    );
+
+    final supportedLens = <AVCaptureVideoStabilizationMode>[];
+
+    for (final name in result ?? []) {
+      supportedLens
+          .add(AVCaptureVideoStabilizationModeExtension.typeByValue(name));
+    }
+
+    return supportedLens;
+  }
+
+  Future<bool> setPreferredStabilizationMode(
+    AVCaptureVideoStabilizationMode mode,
+  ) async {
+    supportedPlatforms();
+
+    final result = await channel.invokeMethod<bool>(
+      '#VideoHelper/setPreferredStabilizationMode',
+      {'mode': mode.value},
+    );
+
+    return result ?? false;
+  }
+
+  Future<AVCaptureVideoStabilizationMode>
+      getPreferredStabilizationMode() async {
+    supportedPlatforms();
+
+    final result = await channel.invokeMethod<int>(
+      '#VideoHelper/getPreferredStabilizationMode',
+    );
+
+    if (result == null) {
+      throw 'Can not detect AVCaptureVideoStabilizationMode';
+    }
+
+    final type = AVCaptureVideoStabilizationModeExtension.typeByValue(
+      result,
+    );
+
+    return type;
+  }
+
+  Future<AVCaptureVideoStabilizationMode> getActiveStabilizationMode() async {
+    supportedPlatforms();
+
+    final result = await channel.invokeMethod<int>(
+      '#VideoHelper/getActiveStabilizationMode',
+    );
+
+    if (result == null) {
+      throw 'Can not detect active AVCaptureVideoStabilizationMode';
+    }
+
+    final type = AVCaptureVideoStabilizationModeExtension.typeByValue(
+      result,
+    );
+
+    return type;
+  }
 }

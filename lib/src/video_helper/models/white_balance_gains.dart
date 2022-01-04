@@ -32,6 +32,17 @@ class WhiteBalanceGains {
         'greenGain': greenGain,
         'blueGain': blueGain,
       };
+
+  WhiteBalanceGains copyWith({
+    double? red,
+    double? green,
+    double? blue,
+  }) =>
+      WhiteBalanceGains(
+        redGain: red ?? redGain,
+        blueGain: blue ?? blueGain,
+        greenGain: green ?? greenGain,
+      );
 }
 
 class TemperatureAndTintWhiteBalanceGains {

@@ -94,4 +94,8 @@ extension AVCaptureVideoStabilizationModeExtension
     }
     return AVCaptureVideoStabilizationMode.off;
   }
+
+  bool get isCinematic =>
+      this == AVCaptureVideoStabilizationMode.cinematic ||
+      this == AVCaptureVideoStabilizationMode.cinematic_extended;
 }

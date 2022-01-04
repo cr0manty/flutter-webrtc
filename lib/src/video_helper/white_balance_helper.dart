@@ -12,7 +12,8 @@ class WhiteBalanceHelper extends BaseVideoHelper {
   );
 
   Stream<AVCaptureWhiteBalanceMode>? _whiteBalanceModeStream;
-  Stream<TemperatureAndTintWhiteBalanceGains>? _whiteBalanceGainsStream;
+  Stream<TemperatureAndTintWhiteBalanceGains>? _whiteBalanceTempGainsStream;
+  Stream<WhiteBalanceGains>? _whiteBalanceGainsStream;
 
   Stream<AVCaptureWhiteBalanceMode> get whiteBalanceModeStream {
     _whiteBalanceModeStream ??=
@@ -26,14 +27,25 @@ class WhiteBalanceHelper extends BaseVideoHelper {
     return _whiteBalanceModeStream!;
   }
 
-  Stream<TemperatureAndTintWhiteBalanceGains> get whiteBalanceGainsStream {
+  Stream<TemperatureAndTintWhiteBalanceGains> get whiteBalanceTempGainsStream {
+    _whiteBalanceTempGainsStream ??= whiteBalanceGainsStream.transform(
+      StreamTransformer.fromHandlers(
+        handleData: (gains, EventSink sink) async {
+          final tempGains = await convertDeviceGainsToTemperature(gains);
+          sink.add(tempGains);
+        },
+      ),
+    );
+    return _whiteBalanceTempGainsStream!;
+  }
+
+  Stream<WhiteBalanceGains> get whiteBalanceGainsStream {
     _whiteBalanceGainsStream ??=
         _whiteBalanceGainsChannel.receiveBroadcastStream().transform(
       StreamTransformer.fromHandlers(
         handleData: (json, EventSink sink) async {
           final gains = WhiteBalanceGains.fromJson(json);
-          final tempGains = await convertDeviceGainsToTemperature(gains);
-          sink.add(tempGains);
+          sink.add(gains);
         },
       ),
     );
@@ -54,6 +66,15 @@ class WhiteBalanceHelper extends BaseVideoHelper {
     final mode = AVCaptureWhiteBalanceMode.values[index];
 
     return mode;
+  }
+
+  Future<bool> isWhiteBalanceLockSupported() async {
+    supportedPlatforms();
+
+    final result = await channel.invokeMethod<bool>(
+      '#VideoHelper/isWhiteBalanceLockSupported',
+    );
+    return result ?? false;
   }
 
   Future<bool> isWhiteBalanceModeSupported(
@@ -89,6 +110,12 @@ class WhiteBalanceHelper extends BaseVideoHelper {
   ) async {
     supportedPlatforms();
 
+    final isSupported = await isWhiteBalanceLockSupported();
+
+    if (!isSupported && mode == AVCaptureWhiteBalanceMode.locked) {
+      return false;
+    }
+
     final result = await channel.invokeMethod<bool>(
       '#VideoHelper/setWhiteBalanceMode',
       {'mode': mode.index},
@@ -96,8 +123,15 @@ class WhiteBalanceHelper extends BaseVideoHelper {
     return result ?? false;
   }
 
-  Future<bool> setWhiteBalanceGains(WhiteBalanceGains gains) async {
+  Future<bool> changeWhiteBalanceGains(WhiteBalanceGains gains) async {
     supportedPlatforms();
+
+    final isSupported = await isWhiteBalanceLockSupported();
+
+    if (!isSupported) {
+      throw 'changeWhiteBalanceGains is not supported'
+          'use [isWhiteBalanceLockSupported] for check is lock mode is supported';
+    }
 
     final result = await channel.invokeMethod<bool>(
       '#VideoHelper/setWhiteBalanceGains',
@@ -111,6 +145,13 @@ class WhiteBalanceHelper extends BaseVideoHelper {
   ) async {
     supportedPlatforms();
 
+    final isSupported = await isWhiteBalanceLockSupported();
+
+    if (!isSupported) {
+      throw 'changeWhiteBalanceTemperatureAndTint is not supported'
+          'use [isWhiteBalanceLockSupported] for check is lock mode is supported';
+    }
+
     final result = await channel.invokeMethod<bool>(
       '#VideoHelper/changeWhiteBalanceTemperatureAndTint',
       gains.toJson(),
@@ -120,6 +161,13 @@ class WhiteBalanceHelper extends BaseVideoHelper {
 
   Future<bool> lockWithGrayWorld() async {
     supportedPlatforms();
+
+    final isSupported = await isWhiteBalanceLockSupported();
+
+    if (!isSupported) {
+      throw 'lockWithGrayWorld is not supported'
+          'use [isWhiteBalanceLockSupported] for check is lock mode is supported';
+    }
 
     final result = await channel.invokeMethod<bool>(
       '#VideoHelper/lockWithGrayWorld',
@@ -133,7 +181,7 @@ class WhiteBalanceHelper extends BaseVideoHelper {
     final result = await channel.invokeMethod<double>(
       '#VideoHelper/getMaxBalanceGains',
     );
-    return result ?? 0.0;
+    return result ?? 1.0;
   }
 
   Future<WhiteBalanceGains> getCurrentBalanceGains() async {

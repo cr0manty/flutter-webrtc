@@ -34,13 +34,16 @@
         if (device != nil) {
             return device;
         }
-        
+    }
+    
+    if (@available(iOS 10.2, *)) {
         device = [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInDualCamera mediaType:AVMediaTypeVideo position:position];
-        
+
         if (device != nil) {
             return device;
         }
     }
+    
     
     if (position == AVCaptureDevicePositionUnspecified) {
         return [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
@@ -75,15 +78,15 @@
         [data addObject:AVCaptureDeviceTypeBuiltInWideAngleCamera];
     }
     
+    if ([AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInTelephotoCamera mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack]) {
+        [data addObject:AVCaptureDeviceTypeBuiltInTelephotoCamera];
+    }
+    
     if (@available(iOS 13.0, *)) {
         if ([AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInUltraWideCamera mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack]) {
             
             [data addObject:AVCaptureDeviceTypeBuiltInUltraWideCamera];
         }
-    }
-    
-    if ([AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInTelephotoCamera mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack]) {
-        [data addObject:AVCaptureDeviceTypeBuiltInTelephotoCamera];
     }
     
     return data;

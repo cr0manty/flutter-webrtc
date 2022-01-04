@@ -133,7 +133,7 @@
     }
     
     if (error) {
-        @throw [NSException exceptionWithName:@"Set exposure mode excetion"
+        @throw [NSException exceptionWithName:@"Set focus point excetion"
                                        reason:[NSString stringWithFormat:@"%@", error]
                                      userInfo:nil];
     }

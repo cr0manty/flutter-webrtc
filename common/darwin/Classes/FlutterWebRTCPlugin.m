@@ -461,6 +461,50 @@
                                        message:[NSString stringWithFormat:@"%@ deviceType is not available for AVCaptureDevice", name]
                                        details:nil]);
         }
+    } else if ([@"#VideoHelper/getSupportedStabilizationMode" isEqualToString:call.method]) {
+        NSArray *value = [_zoomHelper getSupportedStabilizationMode];
+        result(value);
+    } else if ([@"#VideoHelper/setPreferredStabilizationMode" isEqualToString:call.method]) {
+        NSDictionary* argsMap = call.arguments;
+        NSNumber *mode = argsMap[@"mode"];
+        BOOL value = FALSE;
+        
+        if (@available(iOS 13.0, *)) {
+            AVCaptureConnection *connection = [self.videoCapturer.captureSession.connections objectAtIndex:0];
+            
+            value = [_zoomHelper setPreferredStabilizationMode:connection modeNum:[mode intValue]];
+        }
+        
+        result([NSNumber numberWithBool:value]);
+    } else if ([@"#VideoHelper/getPreferredStabilizationMode" isEqualToString:call.method]) {
+        if (@available(iOS 13.0, *)) {
+            AVCaptureConnection *connection = [self.videoCapturer.captureSession.connections objectAtIndex:0];
+            
+            AVCaptureVideoStabilizationMode value = [_zoomHelper getPreferredStabilizationMode:connection];
+            result(@(value));
+        } else {
+            result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@ Failed", call.method]
+                                       message:@"getPreferredStabilizationMode not available"
+                                       details:nil]);
+        }
+    } else if ([@"#VideoHelper/getActiveStabilizationMode" isEqualToString:call.method]) {
+        if (@available(iOS 13.0, *)) {
+            AVCaptureConnection *connection = [self.videoCapturer.captureSession.connections objectAtIndex:0];
+            
+            AVCaptureVideoStabilizationMode value = [_zoomHelper getActiveStabilizationMode:connection];
+            result(@(value));
+        } else {
+            result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@ Failed", call.method]
+                                       message:@"getPreferredStabilizationMode not available"
+                                       details:nil]);
+        }
+    } else if ([@"#VideoHelper/isWhiteBalanceLockSupported" isEqualToString:call.method]) {
+        AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
+        AVCaptureDevice *device = deviceInput.device;
+        
+        BOOL value = [_whiteBalanceHelper isWhiteBalanceLockSupported:device];
+        
+        result([NSNumber numberWithBool:value]);
     } else {
         result(FlutterMethodNotImplemented);
     }
