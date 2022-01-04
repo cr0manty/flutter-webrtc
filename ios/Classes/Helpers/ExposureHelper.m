@@ -57,7 +57,7 @@ __const float kExposureMinimumDuration = 1.0/1000;
                                                      binaryMessenger: [registrar messenger]];
     FlutterSinkDataHandler *exposureTargetOffsetHandler = [[FlutterSinkDataHandler alloc]init];
     [exposureTargetOffsetChannel setStreamHandler:exposureTargetOffsetHandler];
-    instance.focusLensPositionHandler = exposureTargetOffsetHandler;
+    instance.exposureTargetOffsetHandler = exposureTargetOffsetHandler;
 }
 
 -(NSArray*)getSupportedExposureMode:(AVCaptureDevice*)device {
