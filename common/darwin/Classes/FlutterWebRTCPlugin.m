@@ -132,6 +132,7 @@
     }
 #endif
 }
+
 - (void)handleVideoHelperMethodCall:(FlutterMethodCall*)call result:(FlutterResult) result {
     if ([@"#VideoHelper/isFocusModeSupported" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
@@ -462,8 +463,14 @@
                                        details:nil]);
         }
     } else if ([@"#VideoHelper/getSupportedStabilizationMode" isEqualToString:call.method]) {
-        NSArray *value = [_zoomHelper getSupportedStabilizationMode];
-        result(value);
+        if (@available(iOS 13.0, *)) {
+            AVCaptureConnection *connection = [self.videoCapturer.captureSession.connections objectAtIndex:0];
+            
+            NSArray* value = [_zoomHelper getSupportedStabilizationMode:connection];
+            result(value);
+        } else {
+            result(nil);
+        }
     } else if ([@"#VideoHelper/setPreferredStabilizationMode" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *mode = argsMap[@"mode"];
@@ -471,7 +478,6 @@
         
         if (@available(iOS 13.0, *)) {
             AVCaptureConnection *connection = [self.videoCapturer.captureSession.connections objectAtIndex:0];
-            
             value = [_zoomHelper setPreferredStabilizationMode:connection modeNum:[mode intValue]];
         }
         

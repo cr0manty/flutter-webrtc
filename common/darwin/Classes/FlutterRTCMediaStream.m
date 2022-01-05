@@ -763,7 +763,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }
 }
 
--(void)setVideoDevice:(AVCaptureDevice*) device {
+-(void)setVideoDevice:(AVCaptureDevice*)device {
     [self removeObservers];
     _videoDevice = device;
     [self addObservers:device];

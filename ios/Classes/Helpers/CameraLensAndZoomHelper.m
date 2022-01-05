@@ -144,9 +144,13 @@
     return TRUE;
 }
 
--(NSArray*)getSupportedStabilizationMode {
+-(NSArray*)getSupportedStabilizationMode:(AVCaptureConnection*)connection {
     NSMutableArray *array = [[NSMutableArray alloc] init];
     
+    if (![connection isVideoStabilizationSupported]) {
+        return array;
+    }
+
     [array addObject:[NSNumber numberWithInteger:AVCaptureVideoStabilizationModeOff]];
     [array addObject:[NSNumber numberWithInteger:AVCaptureVideoStabilizationModeStandard]];
     [array addObject:[NSNumber numberWithInteger:AVCaptureVideoStabilizationModeCinematic]];

@@ -103,7 +103,7 @@ class CameraLensAndZoomHelper extends BaseVideoHelper {
   }
 
   Future<List<AVCaptureVideoStabilizationMode>>
-      getSupportedStabilizationMode() async {
+  getSupportedStabilizationMode() async {
     supportedPlatforms();
 
     final result = await channel.invokeMethod<List>(
@@ -114,15 +114,14 @@ class CameraLensAndZoomHelper extends BaseVideoHelper {
 
     for (final name in result ?? []) {
       supportedLens
-          .add(AVCaptureVideoStabilizationModeExtension.typeByValue(name));
+          .add(AVCaptureVideoStabilizationModeExtension.typeByValue(name),);
     }
 
     return supportedLens;
   }
 
   Future<bool> setPreferredStabilizationMode(
-    AVCaptureVideoStabilizationMode mode,
-  ) async {
+      AVCaptureVideoStabilizationMode mode,) async {
     supportedPlatforms();
 
     final result = await channel.invokeMethod<bool>(
@@ -134,7 +133,7 @@ class CameraLensAndZoomHelper extends BaseVideoHelper {
   }
 
   Future<AVCaptureVideoStabilizationMode>
-      getPreferredStabilizationMode() async {
+  getPreferredStabilizationMode() async {
     supportedPlatforms();
 
     final result = await channel.invokeMethod<int>(

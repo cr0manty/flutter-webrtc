@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(AVCaptureVideoStabilizationMode)getActiveStabilizationMode:(AVCaptureConnection*)connection;
 
--(NSArray*)getSupportedStabilizationMode;
+-(NSArray*)getSupportedStabilizationMode:(AVCaptureConnection*)connection;
 
 #pragma mark - zoom
 
@@ -51,7 +51,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(BOOL)canSwitchToUltraWideCamera:(AVCaptureDevice*)device
                              zoom:(float)zoom;
-
 
 @end
 
