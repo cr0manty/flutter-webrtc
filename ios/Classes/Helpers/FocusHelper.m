@@ -35,6 +35,18 @@
     instance.focusLensPositionHandler = focusLensPositionHandler;
 }
 
++(void)addObservers:(AVCaptureDevice*)device
+           instance:(id)instance {
+    [device addObserver:instance forKeyPath:@"focusMode" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
+    [device addObserver:instance forKeyPath:@"lensPosition" options:NSKeyValueObservingOptionNew context:nil];
+}
+
++(void)removeObservers:(AVCaptureDevice*)device
+              instance:(id)instance {
+    [device removeObserver:instance forKeyPath:@"focusMode" context:nil];
+    [device removeObserver:instance forKeyPath:@"lensPosition" context:nil];
+}
+
 -(BOOL)isFocusModeSupported:(AVCaptureDevice*)device
                     modeNum:(NSInteger)modeNum {
     AVCaptureFocusMode mode = (AVCaptureFocusMode)modeNum;

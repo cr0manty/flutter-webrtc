@@ -35,6 +35,16 @@
     instance.whiteBalanceGainsHandler = whiteBalanceGainsHandlerHandler;
 }
 
++(void)addObservers:(AVCaptureDevice*)device instance:(id)instance {
+    [device addObserver:instance forKeyPath:@"whiteBalanceMode" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
+    [device addObserver:instance forKeyPath:@"deviceWhiteBalanceGains" options:NSKeyValueObservingOptionNew context:nil];
+}
+
++(void)removeObservers:(AVCaptureDevice*)device instance:(id)instance {
+    [device removeObserver:instance forKeyPath:@"whiteBalanceMode" context:nil];
+    [device removeObserver:instance forKeyPath:@"deviceWhiteBalanceGains" context:nil];
+}
+
 -(AVCaptureWhiteBalanceMode)getWhiteBalanceMode:(AVCaptureDevice*)device {
     return [device whiteBalanceMode];
 }
@@ -95,12 +105,12 @@
 -(BOOL)setWhiteBalance:(AVCaptureDevice*)device
                  gains:(AVCaptureWhiteBalanceGains)gains {
     
-    AVCaptureWhiteBalanceGains normilizedGains = [self normalizedGains:device gains:gains];
-    
     if ([device isWhiteBalanceModeSupported:AVCaptureWhiteBalanceModeLocked]) {
         NSError *error = nil;
         
         if([device lockForConfiguration:&error]) {
+            AVCaptureWhiteBalanceGains normilizedGains = [self normalizedGains:device gains:gains];
+            
             [device setWhiteBalanceModeLockedWithDeviceWhiteBalanceGains:normilizedGains completionHandler:nil];
             
             [device unlockForConfiguration];

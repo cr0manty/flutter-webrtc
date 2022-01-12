@@ -20,6 +20,12 @@ NS_ASSUME_NONNULL_BEGIN
 +(void)registerAdditionalHandlers:(NSObject<FlutterPluginRegistrar>*)registrar
                           instance:(FlutterWebRTCPlugin*)instance;
 
++(void)addObservers:(AVCaptureDevice*)device
+           instance:(id)instance;
+
++(void)removeObservers:(AVCaptureDevice*)device
+              instance:(id)instance;
+
 -(AVCaptureWhiteBalanceMode)getWhiteBalanceMode:(AVCaptureDevice*)device;
 
 -(NSArray*)getSupportedWhiteBalanceMode:(AVCaptureDevice*)device;

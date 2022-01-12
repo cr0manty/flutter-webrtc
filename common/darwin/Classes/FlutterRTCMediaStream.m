@@ -9,6 +9,8 @@
 #import "FlutterRTCCameraVideoCapturer.h"
 #import "CameraLensAndZoomHelper.h"
 #import "ExposureHelper.h"
+#import "WhiteBalanceHelper.h"
+#import "FocusHelper.h"
 #import "FlutterDataHandler.h"
 
 #if TARGET_OS_IPHONE
@@ -30,8 +32,9 @@
 
 
 @implementation  FlutterWebRTCPlugin (RTCMediaStream)
-AVCaptureDevice *_videoDevice;
 
+AVCaptureDevice *_videoDevice;
+NSDictionary* _helperObservers;
 
 /**
  * {@link https://www.w3.org/TR/mediacapture-streams/#navigatorusermediaerrorcallback}
@@ -77,10 +80,16 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
        errorCallback:(NavigatorUserMediaErrorCallback)errorCallback
          mediaStream:(RTCMediaStream *)mediaStream {
     NSString *trackId = [[NSUUID UUID] UUIDString];
-    RTCAudioTrack *audioTrack
-    = [self.peerConnectionFactory audioTrackWithTrackId:trackId];
-    
-    [mediaStream addAudioTrack:audioTrack];
+    id audioConstraints = constraints[@"audio"];
+    if([audioConstraints isKindOfClass:[NSNumber class]] && [audioConstraints boolValue]) {
+        RTCAudioTrack *audioTrack = [self.peerConnectionFactory audioTrackWithTrackId:trackId];
+        [mediaStream addAudioTrack:audioTrack];
+    } else if([audioConstraints isKindOfClass:[NSDictionary class]]) {
+        RTCAudioSource *audioSource = [self.peerConnectionFactory
+                                audioSourceWithConstraints:[self parseMediaConstraints:constraints]];
+        RTCAudioTrack *audioTrack = [self.peerConnectionFactory audioTrackWithSource:audioSource trackId:trackId];
+        [mediaStream addAudioTrack:audioTrack];
+    }
     
     successCallback(mediaStream);
 }
@@ -220,6 +229,13 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
      successCallback:(NavigatorUserMediaSuccessCallback)successCallback
        errorCallback:(NavigatorUserMediaErrorCallback)errorCallback
          mediaStream:(RTCMediaStream *)mediaStream {
+    id helperObservers = constraints[@"helpers"];
+    if (helperObservers && [helperObservers isKindOfClass:[NSDictionary class]]) {
+        _helperObservers = helperObservers;
+    } else {
+        _helperObservers = [NSDictionary alloc];
+    }
+    
     id videoConstraints = constraints[@"video"];
     
     if ([videoConstraints isKindOfClass:[NSDictionary class]]) {
@@ -306,14 +322,6 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
             if (possibleFps != 0) {
                 self._targetFps = possibleFps;
             }
-        }
-    }
-    
-    if (_videoDevice) {
-        NSError *error;
-        if([_videoDevice isFocusModeSupported:AVCaptureFocusModeAutoFocus] &&[_videoDevice lockForConfiguration:&error]) {
-            [_videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
-            [_videoDevice unlockForConfiguration];
         }
     }
     
@@ -623,31 +631,6 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }];
 }
 
--(void)mediaStreamChangeFocus:(FlutterResult)result
-{
-    if (!self.videoCapturer) {
-        NSLog(@"Video capturer is null. Can't change focus");
-        return;
-    }
-    AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
-    AVCaptureDevice *videoDevice = deviceInput.device;
-    
-    if (videoDevice) {
-        NSError *error;
-        if([videoDevice lockForConfiguration:&error]) {
-            [videoDevice setFocusMode:AVCaptureFocusModeAutoFocus];
-            [videoDevice unlockForConfiguration];
-            result([NSNumber numberWithBool:TRUE]);
-        } else {
-            result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:error]);
-        }
-        
-        if (error) {
-            result([FlutterError errorWithCode:@"Error while changing focus" message:@"Error while changing focus" details:error]);
-        }
-    }
-}
-
 -(void)mediaStreamTrackCaptureFrame:(RTCVideoTrack *)track toPath:(NSString *) path result:(FlutterResult)result
 {
     if (!self.videoCapturer) {
@@ -699,7 +682,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     return selectedFormat;
 }
 
-- (NSInteger)selectFpsForFormat:(AVCaptureDeviceFormat *)format {
+- (NSInteger)selectFpsForFormat:(AVCaptureDeviceFormat*)format {
     Float64 maxSupportedFramerate = 0;
     for (AVFrameRateRange *fpsRange in format.videoSupportedFrameRateRanges) {
         maxSupportedFramerate = fmax(maxSupportedFramerate, fpsRange.maxFrameRate);
@@ -707,7 +690,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     return fmin(maxSupportedFramerate, self._targetFps);
 }
 
--(void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+-(void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     id oldValue = [change valueForKey:NSKeyValueChangeOldKey];
     id newValue = [change valueForKey:NSKeyValueChangeNewKey];
     
@@ -769,32 +752,32 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     [self addObservers:device];
 }
 
--(void) removeObservers {
+-(void)removeObservers {
     @try {
-        [_videoDevice removeObserver:self forKeyPath:@"whiteBalanceMode" context:nil];
-        [_videoDevice removeObserver:self forKeyPath:@"deviceWhiteBalanceGains" context:nil];
-        [_videoDevice removeObserver:self forKeyPath:@"focusMode" context:nil];
-        [_videoDevice removeObserver:self forKeyPath:@"lensPosition" context:nil];
-        [_videoDevice removeObserver:self forKeyPath:@"exposureMode" context:nil];
-        [_videoDevice removeObserver:self forKeyPath:@"exposureDuration" context:nil];
-        [_videoDevice removeObserver:self forKeyPath:@"ISO" context:nil];
-        [_videoDevice removeObserver:self forKeyPath:@"exposureTargetBias" context:nil];
-        [_videoDevice removeObserver:self forKeyPath:@"exposureTargetOffset" context:nil];
+        if (_helperObservers[@"white_balance"]) {
+            [WhiteBalanceHelper removeObservers:_videoDevice instance:self];
+        }
+        if (_helperObservers[@"focus"]) {
+            [FocusHelper removeObservers:_videoDevice instance:self];
+        }
+        if (_helperObservers[@"exposure"]) {
+            [ExposureHelper removeObservers:_videoDevice instance:self];
+        }
     } @catch (NSException *exception) {
         NSLog(@"removeObservers error: %@", exception);
     }
 }
 
--(void) addObservers:(AVCaptureDevice*)device {
-    [device addObserver:self forKeyPath:@"whiteBalanceMode" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
-    [device addObserver:self forKeyPath:@"deviceWhiteBalanceGains" options:NSKeyValueObservingOptionNew context:nil];
-    [device addObserver:self forKeyPath:@"focusMode" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
-    [device addObserver:self forKeyPath:@"lensPosition" options:NSKeyValueObservingOptionNew context:nil];
-    [device addObserver:self forKeyPath:@"exposureMode" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
-    [device addObserver:self forKeyPath:@"exposureDuration" options:NSKeyValueObservingOptionNew context:nil];
-    [device addObserver:self forKeyPath:@"ISO" options:NSKeyValueObservingOptionNew context:nil];
-    [device addObserver:self forKeyPath:@"exposureTargetBias" options:NSKeyValueObservingOptionNew context:nil];
-    [device addObserver:self forKeyPath:@"exposureTargetOffset" options:NSKeyValueObservingOptionNew context:nil];
+-(void)addObservers:(AVCaptureDevice*)device {
+    if (_helperObservers[@"white_balance"]) {
+        [WhiteBalanceHelper addObservers:device instance:self];
+    }
+    if (_helperObservers[@"focus"]) {
+        [FocusHelper addObservers:device instance:self];
+    }
+    if (_helperObservers[@"exposure"]) {
+        [ExposureHelper addObservers:device instance:self];
+    }
 }
 
 

@@ -407,7 +407,6 @@
         AVCaptureDevice *device = deviceInput.device;
         
         CMTime value = [_exposureHelper minExposureDuration:device];
-        
         float seconds = CMTimeGetSeconds(value);
         
         result(@{@"value": [NSNumber numberWithInteger:value.value], @"timescale": [NSNumber numberWithInteger:value.timescale], @"seconds": [NSNumber numberWithFloat:seconds]});
@@ -459,7 +458,7 @@
             [self mediaStreamTrackChangeCamera: device result:result];
         } else {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@ Failed", call.method]
-                                       message:[NSString stringWithFormat:@"%@ deviceType is not available for AVCaptureDevice", name]
+                                       message:[NSString stringWithFormat:@"%@ deviceType is not available", name]
                                        details:nil]);
         }
     } else if ([@"#VideoHelper/getSupportedStabilizationMode" isEqualToString:call.method]) {
@@ -956,22 +955,7 @@
             }
         }
     } else if ([@"mediaStreamTrackSwitchCamera" isEqualToString:call.method]){
-        NSDictionary* argsMap = call.arguments;
-        NSString* trackId = argsMap[@"trackId"];
-        
-        RTCMediaStreamTrack *track = self.localTracks[trackId];
-        if (track != nil && [track isKindOfClass:[RTCVideoTrack class]]) {
-            RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
-            [self mediaStreamTrackSwitchCamera:result];
-        } else {
-            if (track == nil) {
-                result([FlutterError errorWithCode:@"Track is nil" message:nil details:nil]);
-            } else {
-                result([FlutterError errorWithCode:[@"Track is class of " stringByAppendingString:[[track class] description]] message:nil details:nil]);
-            }
-        }
-    } else if ([@"mediaStreamChangeFocus" isEqualToString:call.method]){
-        [self mediaStreamChangeFocus:result];
+        [self mediaStreamTrackSwitchCamera:result];
     } else if ([@"setVolume" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];

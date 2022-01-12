@@ -19,6 +19,12 @@ NS_ASSUME_NONNULL_BEGIN
 +(void)registerAdditionalHandlers:(NSObject<FlutterPluginRegistrar>*)registrar
                           instance:(FlutterWebRTCPlugin*)instance;
 
++(void)addObservers:(AVCaptureDevice*)device
+           instance:(id)instance;
+
++(void)removeObservers:(AVCaptureDevice*)device
+              instance:(id)instance;
+
 -(BOOL)isFocusModeSupported:(AVCaptureDevice*)device
                     modeNum:(NSInteger)modeNum;
 

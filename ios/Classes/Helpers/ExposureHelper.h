@@ -21,7 +21,13 @@ NS_ASSUME_NONNULL_BEGIN
                           instance:(FlutterWebRTCPlugin*)instance;
 
 +(NSDictionary*)getExposureDurationSeconds:(AVCaptureDevice*)device
-                                  duration:(CMTime) duration;
+                                  duration:(CMTime)duration;
+
++(void)addObservers:(AVCaptureDevice*)device
+           instance:(id)instance;
+
++(void)removeObservers:(AVCaptureDevice*)device
+              instance:(id)instance;
 
 -(BOOL)isExposureModeSupported:(AVCaptureDevice*)device
                        modeNum:(NSInteger)modeNum;
@@ -59,6 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(BOOL)changeExposureDuration:(AVCaptureDevice*)device
                          value:(float)value;
+
+-(float)normalizeISO:(AVCaptureDevice*)device iso:(float)iso;
 
 -(CMTime)getExposureDuration:(AVCaptureDevice*)device;
 

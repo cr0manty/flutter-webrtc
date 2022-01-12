@@ -60,6 +60,24 @@ __const float kExposureMinimumDuration = 1.0/1000;
     instance.exposureTargetOffsetHandler = exposureTargetOffsetHandler;
 }
 
++(void)addObservers:(AVCaptureDevice*)device
+           instance:(id)instance {
+    [device addObserver:instance forKeyPath:@"exposureMode" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
+    [device addObserver:instance forKeyPath:@"exposureDuration" options:NSKeyValueObservingOptionNew context:nil];
+    [device addObserver:instance forKeyPath:@"ISO" options:NSKeyValueObservingOptionNew context:nil];
+    [device addObserver:instance forKeyPath:@"exposureTargetBias" options:NSKeyValueObservingOptionNew context:nil];
+    [device addObserver:instance forKeyPath:@"exposureTargetOffset" options:NSKeyValueObservingOptionNew context:nil];
+}
+
++(void)removeObservers:(AVCaptureDevice*)device
+              instance:(id)instance {
+    [device removeObserver:instance forKeyPath:@"exposureMode" context:nil];
+    [device removeObserver:instance forKeyPath:@"exposureDuration" context:nil];
+    [device removeObserver:instance forKeyPath:@"ISO" context:nil];
+    [device removeObserver:instance forKeyPath:@"exposureTargetBias" context:nil];
+    [device removeObserver:instance forKeyPath:@"exposureTargetOffset" context:nil];
+}
+
 -(NSArray*)getSupportedExposureMode:(AVCaptureDevice*)device {
     NSMutableArray *array = [[NSMutableArray alloc] init];
     
@@ -119,9 +137,8 @@ __const float kExposureMinimumDuration = 1.0/1000;
     NSError *error;
     
     if (value < [device activeFormat].minISO || value > [device activeFormat].maxISO) {
-        @throw [NSException exceptionWithName:@"Change ISO excetion"
-                                       reason:@"value is not in minISO and maxISO range"
-                                     userInfo:nil];
+        NSLog(@"Change ISO excetion: value is not in minISO and maxISO range");
+        return FALSE;
     }
     
     if([device lockForConfiguration:&error]) {
@@ -144,9 +161,8 @@ __const float kExposureMinimumDuration = 1.0/1000;
     NSError *error;
     
     if (value < [device minExposureTargetBias] || value > [device maxExposureTargetBias]) {
-        @throw [NSException exceptionWithName:@"Change bias excetion"
-                                       reason:@"value is not in minExposureTargetBias and maxExposureTargetBias range"
-                                     userInfo:nil];
+        NSLog(@"Change bias excetion: value is not in minExposureTargetBias and maxExposureTargetBias range");
+        return FALSE;
     }
     
     if([device lockForConfiguration:&error]) {
@@ -179,15 +195,16 @@ __const float kExposureMinimumDuration = 1.0/1000;
         return FALSE;
     }
     
-    float p = pow(value, kExposureDurationPower); // Apply power function to expand slider's low-end range
-    float minDurationSeconds = MAX(CMTimeGetSeconds(device.activeFormat.minExposureDuration), kExposureMinimumDuration);
-    float maxDurationSeconds = CMTimeGetSeconds(device.activeFormat.maxExposureDuration);
-    float newDurationSeconds = p * ( maxDurationSeconds - minDurationSeconds ) + minDurationSeconds; // Scale from 0-1 slider range to actual duration
-    
     NSError *error;
     
     if([device lockForConfiguration:&error]) {
-        [device setExposureModeCustomWithDuration:CMTimeMakeWithSeconds(newDurationSeconds, 1000*1000*1000) ISO:device.ISO completionHandler:nil];
+        float iso = [self normalizeISO: device iso:device.ISO];
+        float p = pow(value, kExposureDurationPower); // Apply power function to expand slider's low-end range
+        float minDurationSeconds = MAX(CMTimeGetSeconds(device.activeFormat.minExposureDuration), kExposureMinimumDuration);
+        float maxDurationSeconds = CMTimeGetSeconds(device.activeFormat.maxExposureDuration);
+        float newDurationSeconds = p * ( maxDurationSeconds - minDurationSeconds ) + minDurationSeconds;
+        
+        [device setExposureModeCustomWithDuration:CMTimeMakeWithSeconds(newDurationSeconds, 1000*1000*1000) ISO:iso completionHandler:nil];
         [device setWhiteBalanceMode:AVCaptureWhiteBalanceModeLocked];
         
         [device unlockForConfiguration];
@@ -199,6 +216,13 @@ __const float kExposureMinimumDuration = 1.0/1000;
                                      userInfo:nil];
     }
     return FALSE;
+}
+
+-(float)normalizeISO:(AVCaptureDevice*)device iso:(float)iso {
+    float newISO = MAX(device.activeFormat.minISO, iso);
+    newISO = MIN(iso, device.activeFormat.maxISO);
+    
+    return newISO;
 }
 
 -(CMTime)minExposureDuration:(AVCaptureDevice*)device {
@@ -231,7 +255,7 @@ __const float kExposureMinimumDuration = 1.0/1000;
 
 
 -(float)getISO:(AVCaptureDevice*)device {
-    return [device ISO];
+    return device.ISO;
 }
 
 

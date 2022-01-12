@@ -42,18 +42,6 @@ class Helper {
     return navigator.mediaDevices.getUserMedia(mediaConstraints);
   }
 
-  // trigger focus
-  static Future<bool> changeFocus(MediaStreamTrack track) {
-    if (!kIsWeb && !Platform.isAndroid) {
-      return WebRTC.methodChannel().invokeMethod<bool>(
-        'mediaStreamChangeFocus',
-        <String, dynamic>{'trackId': track.id},
-      ).then((value) => value ?? false);
-    }
-
-    return Future.value(false);
-  }
-
   /// For web implementation, make sure to pass the target deviceId
   static Future<bool> switchCamera(
     MediaStreamTrack track, {
