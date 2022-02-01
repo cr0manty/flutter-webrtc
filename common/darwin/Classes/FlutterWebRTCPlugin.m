@@ -79,15 +79,6 @@
         self.viewController = viewController;
 #endif
     }
-    //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
-    RTCDefaultVideoDecoderFactory *decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
-    RTCDefaultVideoEncoderFactory *encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
-    
-    _peerConnectionFactory = [[RTCPeerConnectionFactory alloc]
-                              initWithEncoderFactory:encoderFactory
-                              decoderFactory:decoderFactory];
-    
-    
     self.peerConnections = [NSMutableDictionary new];
     self.localStreams = [NSMutableDictionary new];
     self.localTracks = [NSMutableDictionary new];
@@ -103,6 +94,18 @@
 #endif
     return self;
 }
+
+-(void) ensureInitialized:(BOOL)bypassVoiceProcessing {
+     //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
+     if (!_peerConnectionFactory) {
+         RTCDefaultVideoDecoderFactory *decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
+         RTCDefaultVideoEncoderFactory *encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
+         
+         _peerConnectionFactory = [[RTCPeerConnectionFactory alloc]
+                                   initWithEncoderFactory:encoderFactory
+                                   decoderFactory:decoderFactory];
+     }
+ }
 
 
 - (void)didSessionRouteChange:(NSNotification *)notification {
@@ -528,8 +531,16 @@
         [self handleVideoHelperMethodCall:call result:result];
         return;
     }
-    
-    if ([@"createPeerConnection" isEqualToString:call.method]) {
+    if ([@"initialize" isEqualToString:call.method]) {
+        NSDictionary* argsMap = call.arguments;
+        NSDictionary* options = argsMap[@"options"];
+        BOOL enableBypassVoiceProcessing = NO;
+        if(options[@"bypassVoiceProcessing"] != nil){
+            enableBypassVoiceProcessing = ((NSNumber*)options[@"bypassVoiceProcessing"]).boolValue;
+        }
+        [self ensureInitialized:enableBypassVoiceProcessing];
+        result(@"");
+    } else if ([@"createPeerConnection" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSDictionary* configuration = argsMap[@"configuration"];
         NSDictionary* constraints = argsMap[@"constraints"];

@@ -333,7 +333,13 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         self.videoCapturer = [[FlutterRTCCameraVideoCapturer alloc] initWithDelegate:videoSource];
         AVCaptureDeviceFormat *selectedFormat = [self selectFormatForDevice:_videoDevice];
         NSInteger selectedFps = [self selectFpsForFormat:selectedFormat];
+        
         [self.videoCapturer startCaptureWithDevice:_videoDevice format:selectedFormat fps:selectedFps completionHandler:^(NSError *error) {
+            if (@available(iOS 13.0, *)) {
+                AVCaptureConnection *connection = [self.videoCapturer.captureSession.connections objectAtIndex:0];
+                [connection setVideoOrientation:AVCaptureVideoOrientationLandscapeLeft|AVCaptureVideoOrientationLandscapeRight];
+            }
+            
             if (error) {
                 NSLog(@"Start capture error: %@", [error localizedDescription]);
             }

@@ -4,6 +4,8 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter_webrtc/src/video_helper/base/base_video_helper.dart';
 
 class WhiteBalanceHelper extends BaseVideoHelper {
+  WhiteBalanceHelper() : super();
+
   final _whiteBalanceModeChannel = EventChannel(
     'whiteBalanceMode.dataChannel',
   );

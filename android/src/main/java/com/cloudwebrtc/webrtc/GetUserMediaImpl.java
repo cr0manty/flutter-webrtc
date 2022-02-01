@@ -1026,7 +1026,8 @@ class GetUserMediaImpl {
                     captureRequestBuilder.addTarget(surface);
                     captureSession
                             .setRepeatingRequest(captureRequestBuilder.build(), null, null);
-                }  catch (NullPointerException ex) {
+                } catch (NullPointerException ex) {
+                    zoomChanged = false;
                     ex.printStackTrace();
                 }
                 zoomChanged = true;

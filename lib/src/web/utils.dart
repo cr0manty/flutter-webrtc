@@ -1,6 +1,8 @@
 import 'package:flutter/services.dart';
 
 class WebRTC {
+  static Future<void> initialize({Map<String, dynamic>? options}) async {}
+
   static bool get platformIsDesktop => false;
 
   static bool get platformIsWindows => false;

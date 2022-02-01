@@ -5,12 +5,26 @@ import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 abstract class BaseVideoHelper {
-  final MethodChannel channel = WebRTC.methodChannel();
+  BaseVideoHelper() {
+    if (!kIsWeb) {
+      channel = WebRTC.methodChannel();
+    }
+  }
 
-  bool supportedPlatforms({bool allowAndroid = false}) {
-    if (!kIsWeb && Platform.isIOS) return true;
+  late final MethodChannel channel;
 
-    if (allowAndroid && Platform.isAndroid) return true;
-    throw UnimplementedError('This method not implemented for this platform');
+  bool supportedPlatforms({
+    bool allowAndroid = false,
+    bool allowWeb = false,
+  }) {
+    if (kIsWeb && allowWeb) return true;
+    if (!kIsWeb) {
+      if (Platform.isIOS) return true;
+
+      if (allowAndroid && Platform.isAndroid) return true;
+    }
+    throw UnimplementedError(
+      'This method not implemented for this platform',
+    );
   }
 }
