@@ -38,7 +38,8 @@ NS_ASSUME_NONNULL_BEGIN
                modeNum:(NSInteger)modeNum;
 
 -(BOOL)setFocusPoint:(AVCaptureDevice*)device
-                point:(CGPoint)point;
+                point:(CGPoint)point
+                monitorSubjectAreaChange:(BOOL) monitorSubjectAreaChange;
 
 -(BOOL)setFocusPointLocked:(AVCaptureDevice*)device
                 lensPosition:(float)lensPosition;

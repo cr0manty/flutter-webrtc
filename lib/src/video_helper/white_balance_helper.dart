@@ -183,7 +183,7 @@ class WhiteBalanceHelper extends BaseVideoHelper {
     final result = await channel.invokeMethod<double>(
       '#VideoHelper/getMaxBalanceGains',
     );
-    return result ?? 1.0;
+    return result ?? 1.1;
   }
 
   Future<WhiteBalanceGains> getCurrentBalanceGains() async {

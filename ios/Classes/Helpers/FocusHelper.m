@@ -105,22 +105,24 @@
 }
 
 -(BOOL)setFocusPoint:(AVCaptureDevice*)device
-               point:(CGPoint) point {
+               point:(CGPoint) point
+               monitorSubjectAreaChange:(BOOL) monitorSubjectAreaChange {
     if (device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
         
         NSError *error = nil;
         if([device lockForConfiguration:&error]) {
             
-            if ([device isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
+            if ([device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
                 [device setFocusPointOfInterest:point];
                 [device setFocusMode:AVCaptureFocusModeAutoFocus];
             }
             
-            if([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
+            if([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]
+               && [device exposureMode] != AVCaptureExposureModeCustom) {
                 [device setExposurePointOfInterest:point];
                 [device setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
             }
-            
+            [device setSubjectAreaChangeMonitoringEnabled:monitorSubjectAreaChange];
             [device unlockForConfiguration];
             return TRUE;
         }

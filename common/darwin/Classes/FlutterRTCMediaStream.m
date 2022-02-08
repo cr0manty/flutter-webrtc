@@ -760,13 +760,13 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
 
 -(void)removeObservers {
     @try {
-        if (_helperObservers[@"white_balance"]) {
+        if ([_helperObservers[@"white_balance"] boolValue]) {
             [WhiteBalanceHelper removeObservers:_videoDevice instance:self];
         }
-        if (_helperObservers[@"focus"]) {
+        if ([_helperObservers[@"focus"] boolValue]) {
             [FocusHelper removeObservers:_videoDevice instance:self];
         }
-        if (_helperObservers[@"exposure"]) {
+        if ([_helperObservers[@"exposure"] boolValue]) {
             [ExposureHelper removeObservers:_videoDevice instance:self];
         }
     } @catch (NSException *exception) {

@@ -158,11 +158,12 @@
         CGPoint point;
         point.x = [argsMap[@"x"] floatValue];
         point.y = [argsMap[@"y"] floatValue];
+        BOOL monitorSubjectAreaChange = [argsMap[@"monitorSubjectAreaChange"] boolValue];
         
         AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
         AVCaptureDevice *device = deviceInput.device;
         
-        BOOL helpResult = [_focusHelper setFocusPoint:device point:point];
+        BOOL helpResult = [_focusHelper setFocusPoint:device point:point monitorSubjectAreaChange:monitorSubjectAreaChange];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/isWhiteBalanceModeSupported" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
