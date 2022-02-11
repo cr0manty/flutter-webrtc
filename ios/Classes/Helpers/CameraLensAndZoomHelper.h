@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(AVCaptureDevice*)getUltraWideCamera;
 
+-(AVCaptureDevice*)getTelephotoCamera;
+
 -(NSArray*)getSupportedCameraLens;
 
 -(AVCaptureDevice*)getCameraByName:(NSString*)name;

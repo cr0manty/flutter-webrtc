@@ -71,6 +71,10 @@
     }
 }
 
+-(AVCaptureDevice*)getTelephotoCamera {
+    return [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInTelephotoCamera mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
+}
+
 -(NSArray*)getSupportedCameraLens {
     NSMutableArray *data = [[NSMutableArray alloc] init];
     

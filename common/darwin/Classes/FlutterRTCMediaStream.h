@@ -30,4 +30,6 @@
 -(void)mediaStreamTrackCaptureFrame:(RTCMediaStreamTrack *)track
                              toPath:(NSString *) path
                              result:(FlutterResult) result;
+-(void)mediaStreamDispose;
+
 @end

@@ -902,6 +902,7 @@
         render.videoTrack = nil;
         [render dispose];
         [self.renders removeObjectForKey:textureId];
+        [self mediaStreamDispose];
         result(nil);
     } else if ([@"setLandscapeMode" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;

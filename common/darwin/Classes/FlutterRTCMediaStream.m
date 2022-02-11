@@ -786,5 +786,10 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }
 }
 
+-(void)mediaStreamDispose {
+    _videoDevice = nil;
+    [self removeObservers];
+}
+
 
 @end
