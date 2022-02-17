@@ -104,9 +104,12 @@
     return FALSE;
 }
 
+-(BOOL)isFocusPointOfInterestSupported:(AVCaptureDevice*)device {
+    return device.isFocusPointOfInterestSupported;
+}
+
 -(BOOL)setFocusPoint:(AVCaptureDevice*)device
-               point:(CGPoint)point
-               monitorSubjectAreaChange:(BOOL) monitorSubjectAreaChange {
+               point:(CGPoint)point {
     if (!device.isFocusPointOfInterestSupported) {
         @throw [NSException exceptionWithName:@"Set focus point failed"
                                        reason:@"Device does not have focus point capabilities"
@@ -121,8 +124,11 @@
         CGPoint truePoint = [self getCGPointForCoordsWithOrientation:orientation
                                                                    x:point.x
                                                                    y:point.y];
+        [device setFocusPointOfInterest:truePoint];
         [device setExposurePointOfInterest:truePoint];
         [device unlockForConfiguration];
+        
+        [self applyExposureMode: device];
     }
     
     if (error) {
@@ -134,7 +140,7 @@
     return FALSE;
 }
 
-- (void)applyExposureMode:(AVCaptureDevice*)device {
+-(void)applyExposureMode:(AVCaptureDevice*)device {
     [device lockForConfiguration:nil];
 
     AVCaptureExposureMode mode = device.exposureMode;
@@ -157,7 +163,7 @@
     [device unlockForConfiguration];
 }
 
-- (CGPoint)getCGPointForCoordsWithOrientation:(UIDeviceOrientation)orientation
+-(CGPoint)getCGPointForCoordsWithOrientation:(UIDeviceOrientation)orientation
                                             x:(double)x
                                             y:(double)y {
     double oldX = x;

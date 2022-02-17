@@ -138,9 +138,7 @@
 
 - (void)handleVideoHelperMethodCall:(FlutterMethodCall*)call result:(FlutterResult) result {
     if (self.videoCapturer.captureSession.inputs.count < 1) {
-        return result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed", call.method]
-                                   message:[NSString stringWithFormat:@"Error: video input not found"]
-                                   details:nil]);
+        return result(nil);
     }
     
     if ([@"#VideoHelper/getSupportedCameraLens" isEqualToString:call.method]) {
@@ -168,9 +166,8 @@
         CGPoint point;
         point.x = [argsMap[@"x"] floatValue];
         point.y = [argsMap[@"y"] floatValue];
-        BOOL monitorSubjectAreaChange = [argsMap[@"monitorSubjectAreaChange"] boolValue];
         
-        BOOL helpResult = [_focusHelper setFocusPoint:device point:point monitorSubjectAreaChange:monitorSubjectAreaChange];
+        BOOL helpResult = [_focusHelper setFocusPoint:device point:point];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/isWhiteBalanceModeSupported" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
@@ -364,6 +361,9 @@
         BOOL value = [_focusHelper isLockingFocusWithCustomLensPositionSupported:device];
         
         result([NSNumber numberWithBool:value]);
+    } else if ([@"#VideoHelper/isFocusPointOfInterestSupported" isEqualToString:call.method]) {
+        BOOL value = [_focusHelper isFocusPointOfInterestSupported:device];
+        result([NSNumber numberWithBool:value]);
     } else {
         if (@available(iOS 13.0, *)) {
             if (self.videoCapturer.captureSession.connections.count < 1) {
@@ -395,9 +395,7 @@
                 result(FlutterMethodNotImplemented);
             }
         } else {
-            result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@ Failed ", call.method]
-                                       message:@"video connection is not available befor iOS 13.0"
-                                       details:nil]);
+            return result(nil);
         }
     }
     

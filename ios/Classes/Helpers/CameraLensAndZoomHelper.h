@@ -51,9 +51,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(float)getZoomFactor:(AVCaptureDevice*)device;
 
--(BOOL)canSwitchToUltraWideCamera:(AVCaptureDevice*)device
-                             zoom:(float)zoom;
-
 @end
 
 NS_ASSUME_NONNULL_END

@@ -54,6 +54,15 @@ class FocusHelper extends BaseVideoHelper {
     return result ?? false;
   }
 
+  Future<bool> isFocusPointOfInterestSupported() async {
+    supportedPlatforms();
+
+    final result = await channel.invokeMethod<bool>(
+      '#VideoHelper/isFocusPointOfInterestSupported',
+    );
+    return result ?? false;
+  }
+
   Future<bool> isLockingFocusWithCustomLensPositionSupported() async {
     supportedPlatforms();
 
@@ -95,7 +104,6 @@ class FocusHelper extends BaseVideoHelper {
     required TapDownDetails details,
     required Size screenSize,
     required Size previewSize,
-    bool monitorSubjectAreaChange = false,
   }) async {
     supportedPlatforms();
 
@@ -117,7 +125,6 @@ class FocusHelper extends BaseVideoHelper {
           'x': xp,
           'y': yp,
         },
-        'monitorSubjectAreaChange': monitorSubjectAreaChange,
       },
     );
     return result ?? false;

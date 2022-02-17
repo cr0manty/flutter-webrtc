@@ -34,18 +34,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 -(NSArray*)getSupportedFocusMode:(AVCaptureDevice*)device;
 
+-(BOOL)isFocusPointOfInterestSupported:(AVCaptureDevice*)device;
+
 -(BOOL)setFocusMode:(AVCaptureDevice*)device
                modeNum:(NSInteger)modeNum;
 
 -(BOOL)setFocusPoint:(AVCaptureDevice*)device
-                point:(CGPoint)point
-                monitorSubjectAreaChange:(BOOL) monitorSubjectAreaChange;
+                point:(CGPoint)point;
 
 -(BOOL)setFocusPointLocked:(AVCaptureDevice*)device
                 lensPosition:(float)lensPosition;
 
 -(float)getFocusPointLocked:(AVCaptureDevice*)device;
 
+-(CGPoint)getCGPointForCoordsWithOrientation:(UIDeviceOrientation)orientation
+                                            x:(double)x
+                                            y:(double)y;
+
+-(void)applyExposureMode:(AVCaptureDevice*)device;
 
 @end
 

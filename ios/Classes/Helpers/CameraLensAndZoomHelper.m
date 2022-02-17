@@ -27,22 +27,22 @@
 }
 
 +(AVCaptureDevice *)getCameraWithPosition:(AVCaptureDevicePosition)position {
-    AVCaptureDevice* device;
-    if (@available(iOS 13.0, *)) {
-        device = [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInTripleCamera mediaType:AVMediaTypeVideo position:position];
-        
-        if (device != nil) {
-            return device;
-        }
-    }
-    
-    if (@available(iOS 10.2, *)) {
-        device = [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInDualCamera mediaType:AVMediaTypeVideo position:position];
-
-        if (device != nil) {
-            return device;
-        }
-    }
+//    AVCaptureDevice* device;
+//    if (@available(iOS 13.0, *)) {
+//        device = [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInTripleCamera mediaType:AVMediaTypeVideo position:position];
+//
+//        if (device != nil) {
+//            return device;
+//        }
+//    }
+//
+//    if (@available(iOS 10.2, *)) {
+//        device = [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInDualCamera mediaType:AVMediaTypeVideo position:position];
+//
+//        if (device != nil) {
+//            return device;
+//        }
+//    }
     
     
     if (position == AVCaptureDevicePositionUnspecified) {
