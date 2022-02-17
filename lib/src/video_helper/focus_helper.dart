@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -92,23 +92,30 @@ class FocusHelper extends BaseVideoHelper {
   }
 
   Future<bool> setFocusPoint({
-    required Point pointOfTouch,
+    required TapDownDetails details,
     required Size screenSize,
+    required Size previewSize,
     bool monitorSubjectAreaChange = false,
   }) async {
     supportedPlatforms();
 
-    final point = Point(
-      pointOfTouch.y / screenSize.height,
-      1.0 - pointOfTouch.x / screenSize.width,
-    );
+    final x = details.localPosition.dx;
+    final y = details.localPosition.dy;
+
+    final aspectRatio = previewSize.width / previewSize.height;
+
+    final fullWidth = screenSize.width;
+    final cameraHeight = fullWidth * aspectRatio;
+
+    final xp = x / fullWidth;
+    final yp = y / cameraHeight;
 
     final result = await channel.invokeMethod<bool>(
       '#VideoHelper/setFocusPoint',
       {
         'point': {
-          'x': point.x,
-          'y': point.y,
+          'x': xp,
+          'y': yp,
         },
         'monitorSubjectAreaChange': monitorSubjectAreaChange,
       },

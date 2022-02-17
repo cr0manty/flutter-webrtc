@@ -105,36 +105,83 @@
 }
 
 -(BOOL)setFocusPoint:(AVCaptureDevice*)device
-               point:(CGPoint) point
+               point:(CGPoint)point
                monitorSubjectAreaChange:(BOOL) monitorSubjectAreaChange {
-    if (device.isFocusPointOfInterestSupported && [device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
-        
-        NSError *error = nil;
-        if([device lockForConfiguration:&error]) {
-            
-            if ([device isFocusModeSupported:AVCaptureFocusModeAutoFocus]) {
-                [device setFocusPointOfInterest:point];
-                [device setFocusMode:AVCaptureFocusModeAutoFocus];
-            }
-            
-            if([device isExposurePointOfInterestSupported] && [device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]
-               && [device exposureMode] != AVCaptureExposureModeCustom) {
-                [device setExposurePointOfInterest:point];
-                [device setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
-            }
-            [device setSubjectAreaChangeMonitoringEnabled:monitorSubjectAreaChange];
-            [device unlockForConfiguration];
-            return TRUE;
-        }
-        
-        if (error) {
-            @throw [NSException exceptionWithName:@"Set focus point excetion"
-                                           reason:[NSString stringWithFormat:@"%@", error]
-                                         userInfo:nil];
-        }
-        
+    if (!device.isFocusPointOfInterestSupported) {
+        @throw [NSException exceptionWithName:@"Set focus point failed"
+                                       reason:@"Device does not have focus point capabilities"
+                                     userInfo:nil];
+
     }
+    
+    NSError *error = nil;
+    
+    UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
+    if ([device lockForConfiguration:&error]) {
+        CGPoint truePoint = [self getCGPointForCoordsWithOrientation:orientation
+                                                                   x:point.x
+                                                                   y:point.y];
+        [device setExposurePointOfInterest:truePoint];
+        [device unlockForConfiguration];
+    }
+    
+    if (error) {
+        @throw [NSException exceptionWithName:@"Set focus point excetion"
+                                       reason:[NSString stringWithFormat:@"%@", error]
+                                     userInfo:nil];
+    }
+    
     return FALSE;
+}
+
+- (void)applyExposureMode:(AVCaptureDevice*)device {
+    [device lockForConfiguration:nil];
+
+    AVCaptureExposureMode mode = device.exposureMode;
+    
+    switch (mode) {
+        case AVCaptureExposureModeLocked:
+        case AVCaptureExposureModeCustom:
+          [device setExposureMode:AVCaptureExposureModeAutoExpose];
+          break;
+        case AVCaptureExposureModeAutoExpose:
+        case AVCaptureExposureModeContinuousAutoExposure:
+          if ([device isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
+            [device setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
+          } else {
+            [device setExposureMode:AVCaptureExposureModeAutoExpose];
+          }
+          break;
+    }
+    
+    [device unlockForConfiguration];
+}
+
+- (CGPoint)getCGPointForCoordsWithOrientation:(UIDeviceOrientation)orientation
+                                            x:(double)x
+                                            y:(double)y {
+    double oldX = x;
+    double oldY = y;
+    
+    switch (orientation) {
+    case UIDeviceOrientationPortrait:  // 90 ccw
+      y = 1 - oldX;
+      x = oldY;
+      break;
+    case UIDeviceOrientationPortraitUpsideDown:  // 90 cw
+      x = 1 - oldY;
+      y = oldX;
+      break;
+    case UIDeviceOrientationLandscapeRight:  // 180
+      x = 1 - x;
+      y = 1 - y;
+      break;
+    case UIDeviceOrientationLandscapeLeft:
+    default:
+      // No rotation required
+      break;
+    }
+    return CGPointMake(x, y);
 }
 
 -(float)getFocusPointLocked:(AVCaptureDevice*)device {

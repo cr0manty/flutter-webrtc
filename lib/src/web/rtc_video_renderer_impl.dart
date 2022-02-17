@@ -156,6 +156,7 @@ class RTCVideoRendererWeb extends VideoRenderer {
   html.VideoElement? findHtmlView() {
     final element = html.document.getElementById(_elementIdForVideo);
     if (null != element) return element as html.VideoElement;
+    return null;
   }
 
   @override

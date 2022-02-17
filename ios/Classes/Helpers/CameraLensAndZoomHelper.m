@@ -217,28 +217,4 @@
     return [device videoZoomFactor];
 }
 
--(BOOL)canSwitchToUltraWideCamera:(AVCaptureDevice*)device
-                             zoom:(float)zoom {
-    float currentZoom = [device videoZoomFactor];
-    
-    if (currentZoom <= 0.5) {
-        return FALSE;
-    }
-    
-    if (@available(iOS 13.0, *)) {
-        if (device.deviceType == AVCaptureDeviceTypeBuiltInUltraWideCamera) {
-            return FALSE;
-        }
-    }
-    
-    if (currentZoom >= 1 && zoom >= 0.5 && zoom < 1) {
-        AVCaptureDevice *newDevice = [self getUltraWideCamera];
-        if (newDevice != nil) {
-            return TRUE;
-        }
-    }
-    
-    return FALSE;
-}
-
 @end
