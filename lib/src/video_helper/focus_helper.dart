@@ -92,7 +92,7 @@ class FocusHelper extends BaseVideoHelper {
     );
 
     if (index == null || AVCaptureFocusMode.values.length < index) {
-      throw 'getWhiteBalanceMode error: Mode not found';
+      throw 'getFocusMode error: Mode not found';
     }
 
     final mode = AVCaptureFocusMode.values[index];

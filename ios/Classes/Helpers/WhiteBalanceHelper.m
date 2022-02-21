@@ -143,7 +143,10 @@
 }
 
 -(AVCaptureWhiteBalanceGains)getCurrentBalanceGains:(AVCaptureDevice*)device {
-    return device.deviceWhiteBalanceGains;
+    AVCaptureWhiteBalanceGains gains = device.deviceWhiteBalanceGains;
+    AVCaptureWhiteBalanceGains normalizedGains = [self normalizedGains:device gains:gains];
+    
+    return normalizedGains;
 }
 
 -(AVCaptureWhiteBalanceTemperatureAndTintValues)getCurrentTemperatureBalanceGains:(AVCaptureDevice*)device {

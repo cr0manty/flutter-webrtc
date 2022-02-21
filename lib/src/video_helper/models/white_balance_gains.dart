@@ -24,6 +24,8 @@ class WhiteBalanceGains {
   final double greenGain;
   final double blueGain;
 
+  bool get isZeroGains => redGain == 1.0 && greenGain == 1.0 && blueGain == 1.0;
+
   @override
   String toString() => toJson().toString();
 
