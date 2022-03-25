@@ -7,6 +7,7 @@
 #import "FlutterRTCPeerConnection.h"
 #import "FlutterRTCVideoRenderer.h"
 #import "FlutterRTCCameraVideoCapturer.h"
+#import "AudioUtils.h"
 
 #if TARGET_OS_IPHONE
 #import "FlutterRPScreenRecorder.h"
@@ -75,6 +76,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     = [self.peerConnectionFactory audioTrackWithTrackId:trackId];
 
     [mediaStream addAudioTrack:audioTrack];
+    [AudioUtils ensureAudioSessionWithRecording:YES];
 
     successCallback(mediaStream);
 }

@@ -82,7 +82,7 @@
 #if TARGET_OS_IPHONE
     AVAudioSession *session = [AVAudioSession sharedInstance];
 
-    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
+//    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
@@ -95,30 +95,45 @@
     NSDictionary *interuptionDict = notification.userInfo;
     NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
 
-    switch (routeChangeReason) {
-        case AVAudioSessionRouteChangeReasonCategoryChange: {
-            AVAudioSession *session = [AVAudioSession sharedInstance];
-            if ([session category] != AVAudioSessionCategoryMultiRoute) {
-                NSError* setCategoryError;
-                [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
-                           error:&setCategoryError];
-                if(setCategoryError != nil) {
-                    NSLog(@"setCategoryError: %@", setCategoryError);
-                }
-            }
+      switch (routeChangeReason) {
+          case AVAudioSessionRouteChangeReasonCategoryChange: {
+              NSError* error;
+              [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
+              break;
+          }
+          case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
+              [AudioUtils setPreferHeadphoneInput];
+              break;
+          }
 
-            NSError* error;
-            [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
-            if(error != nil) {
-                NSLog(@"setCategoryError: %@", error);
-            }
-            break;
-            }
-        case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
-                  [AudioUtils setPreferHeadphoneInput];
-                  break;
-              }
-        }
+        default:
+          break;
+      }
+
+//    switch (routeChangeReason) {
+//        case AVAudioSessionRouteChangeReasonCategoryChange: {
+//            AVAudioSession *session = [AVAudioSession sharedInstance];
+//            if ([session category] != AVAudioSessionCategoryMultiRoute) {
+//                NSError* setCategoryError;
+//                [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
+//                           error:&setCategoryError];
+//                if(setCategoryError != nil) {
+//                    NSLog(@"setCategoryError: %@", setCategoryError);
+//                }
+//            }
+//
+//            NSError* error;
+//            [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
+//            if(error != nil) {
+//                NSLog(@"setCategoryError: %@", error);
+//            }
+//            break;
+//            }
+//        case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
+//                  [AudioUtils setPreferHeadphoneInput];
+//                  break;
+//              }
+//        }
 #endif
 }
 
