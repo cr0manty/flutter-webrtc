@@ -1,7 +1,59 @@
 # Changelog
 
 --------------------------------------------
-[0.6.10+hotfix.1] - 2021-01-02
+[0.8.3] - 2022-03-01
+
+* [Android/iOS] Update android/ios webrtc native sdk versions.
+* [Windows] Feature of selecting i/o audio devices by passing sourceId and/or deviceId constraints (#851).
+
+[0.8.2] - 2022-02-08
+
+* [Android/iOS/macOS/Web] Add restartIce.
+
+[0.8.1] - 2021-12-29
+
+* [Android/iOS] Bump webrtc-sdk version to 93.4577.01.
+
+[0.8.0] - 2021-12-05
+
+* [Dart] Refactor: Use webrtc interface. (#777)
+* [iOS] Fix crashes for FlutterRPScreenRecorder stop.
+* [Web] Don't stop tracks when disposing MediaStream (#760)
+* [Windows] Add the necessary parameters for onRemoveTrack (#763)
+* [Example] Properly start foreground service in example (#764)
+* [Android] Fix crash for Android, close #757 and #734.
+* [Dart] Fix typo in deprecated annotations.
+* [iOS] Fix IOS captureFrame and add support for remote stream captureFrame (#778)
+* [Windows] Fix parsing stun configuration (#789)
+* [Windows] Fix mute (#792)
+* [iOS/Android/Windows] New video constraints syntax (#790)
+
+[0.7.1] - 2021-11-04
+
+* [iOS/macOS] Update framework.
+* [Android] Update framework.
+* [Windows] Implement mediaStreamTrackSetEnable (#756).
+* [iOS/macOS] Enable audio capture when acquiring track.
+* [Android] Call stopCaptureWithCompletionHandler instead (#748)
+* [Windows] Fix bug for windows.
+
+[0.7.0+hotfix.2] - 2021-10-21
+
+* [iOS/macOS] Update .podspec for Darwin.
+
+[0.7.0+hotfix.1] - 2021-10-21
+
+* [Android] Fix bug for createDataChannel.
+
+[0.7.0] - 2021-10-20
+
+* [Android] Enable Android simulcast (#731)
+* [macOS] Use pre-compiled WebRTC for macOS. (#717)
+* [iOS/macOS] Fix the correct return value of createDataChannel under darwin.
+* [Windows] Fix using the wrong id to listen datachannel events.
+* [Dart] Fix(mediaStreamTrackSetEnable): remote track is unavaiable (#723).
+
+[0.6.10+hotfix.1] - 2021-10-01
 
 * [Web] Fix compiler errors for web.
 

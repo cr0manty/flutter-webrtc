@@ -2,19 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-import '../interface/enums.dart';
-import '../interface/media_stream.dart';
-import '../interface/media_stream_track.dart';
-import '../interface/rtc_data_channel.dart';
-import '../interface/rtc_dtmf_sender.dart';
-import '../interface/rtc_ice_candidate.dart';
-import '../interface/rtc_peerconnection.dart';
-import '../interface/rtc_rtp_receiver.dart';
-import '../interface/rtc_rtp_sender.dart';
-import '../interface/rtc_rtp_transceiver.dart';
-import '../interface/rtc_session_description.dart';
-import '../interface/rtc_stats_report.dart';
-import '../interface/rtc_track_event.dart';
+import 'package:webrtc_interface/webrtc_interface.dart';
+
 import 'media_stream_impl.dart';
 import 'media_stream_track_impl.dart';
 import 'rtc_data_channel_impl.dart';
@@ -422,13 +411,15 @@ class RTCPeerConnectionNative extends RTCPeerConnection {
   Future<RTCDataChannel> createDataChannel(
       String label, RTCDataChannelInit dataChannelDict) async {
     try {
-      await WebRTC.invokeMethod('createDataChannel', <String, dynamic>{
+      final response =
+          await WebRTC.invokeMethod('createDataChannel', <String, dynamic>{
         'peerConnectionId': _peerConnectionId,
         'label': label,
         'dataChannelDict': dataChannelDict.toMap()
       });
+
       _dataChannel =
-          RTCDataChannelNative(_peerConnectionId, label, dataChannelDict.id);
+          RTCDataChannelNative(_peerConnectionId, label, response['id']);
       return _dataChannel!;
     } on PlatformException catch (e) {
       throw 'Unable to RTCPeerConnection::createDataChannel: ${e.message}';
@@ -438,6 +429,17 @@ class RTCPeerConnectionNative extends RTCPeerConnection {
   @override
   RTCDTMFSender createDtmfSender(MediaStreamTrack track) {
     return RTCDTMFSenderNative(_peerConnectionId, '');
+  }
+
+  @override
+  Future<void> restartIce() async {
+    try {
+      await WebRTC.invokeMethod('restartIce', <String, dynamic>{
+        'peerConnectionId': _peerConnectionId,
+      });
+    } on PlatformException catch (e) {
+      throw 'Unable to RTCPeerConnection::resartIce: ${e.message}';
+    }
   }
 
   @override
@@ -513,6 +515,11 @@ class RTCPeerConnectionNative extends RTCPeerConnection {
         'senderId': sender.senderId
       });
       bool result = response['result'];
+
+      if (result && (sender is RTCRtpSenderNative)) {
+        sender.removeTrackReference();
+      }
+
       return result;
     } on PlatformException catch (e) {
       throw 'Unable to RTCPeerConnection::removeTrack: ${e.message}';

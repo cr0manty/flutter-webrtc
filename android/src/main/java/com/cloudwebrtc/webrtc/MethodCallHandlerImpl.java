@@ -19,6 +19,7 @@ import com.cloudwebrtc.webrtc.utils.ConstraintsArray;
 import com.cloudwebrtc.webrtc.utils.ConstraintsMap;
 import com.cloudwebrtc.webrtc.utils.EglUtils;
 import com.cloudwebrtc.webrtc.utils.ObjectType;
+import com.cloudwebrtc.webrtc.SimulcastVideoEncoderFactoryWrapper;
 
 import org.webrtc.AudioTrack;
 import org.webrtc.CryptoOptions;
@@ -156,7 +157,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
 
     mFactory = PeerConnectionFactory.builder()
             .setOptions(new Options())
-            .setVideoEncoderFactory(new DefaultVideoEncoderFactory(eglContext, false, true))
+            .setVideoEncoderFactory(new SimulcastVideoEncoderFactoryWrapper(eglContext, true, false))
             .setVideoDecoderFactory(new DefaultVideoDecoderFactory(eglContext))
             .setAudioDeviceModule(audioDeviceModule)
             .createPeerConnectionFactory();
@@ -377,6 +378,12 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       case "trackDispose": {
         String cameraTrackId = call.argument("trackId");
         localTracks.remove(cameraTrackId);
+        result.success(null);
+        break;
+      }
+      case "restartIce": {
+        String peerConnectionId = call.argument("peerConnectionId");
+        restartIce(peerConnectionId);
         result.success(null);
         break;
       }
@@ -1151,7 +1158,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
   }
 
   public void mediaStreamTrackSetEnabled(final String id, final boolean enabled) {
-    MediaStreamTrack track = localTracks.get(id);
+    MediaStreamTrack track = getTrackForId(id);
 
     if (track == null) {
       Log.d(TAG, "mediaStreamTrackSetEnabled() track is null");
@@ -1460,6 +1467,15 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       resultError("peerConnectionGetStats", "peerConnection is null", result);
     } else {
       pco.getStats(trackId, result);
+    }
+  }
+
+  public void restartIce(final String id) {
+    PeerConnectionObserver pco = mPeerConnectionObservers.get(id);
+    if (pco == null || pco.getPeerConnection() == null) {
+      Log.d(TAG, "restartIce() peerConnection is null");
+    } else {
+      pco.restartIce();
     }
   }
 

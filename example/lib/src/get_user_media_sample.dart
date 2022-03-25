@@ -1,6 +1,7 @@
 import 'dart:core';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:path_provider/path_provider.dart';
@@ -52,8 +53,8 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
       'video': {
         'mandatory': {
           'minWidth':
-              '1280', // Provide your own width, height and frame rate here
-          'minHeight': '720',
+              '640', // Provide your own width, height and frame rate here
+          'minHeight': '480',
           'minFrameRate': '30',
         },
         'facingMode': 'user',
@@ -78,6 +79,9 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
 
   void _hangUp() async {
     try {
+      if (kIsWeb) {
+        _localStream?.getTracks().forEach((track) => track.stop());
+      }
       await _localStream?.dispose();
       _localRenderer.srcObject = null;
       setState(() {
@@ -231,6 +235,6 @@ class _GetUserMediaSampleState extends State<GetUserMediaSample> {
   }
 
   void _selectAudioOutput(String deviceId) {
-    _localRenderer.audioOutput = deviceId;
+    _localRenderer.audioOutput(deviceId);
   }
 }
