@@ -7,9 +7,13 @@
 #import <Foundation/Foundation.h>
 #import <WebRTC/WebRTC.h>
 
+
+NS_ASSUME_NONNULL_BEGIN
+
 @class FlutterRTCVideoRenderer;
 @class FlutterRTCFrameCapturer;
 @class FlutterRTCCameraVideoCapturer;
+@class FlutterSinkDataHandler;
 
 @interface FlutterWebRTCPlugin : NSObject<FlutterPlugin, RTCPeerConnectionDelegate>
 
@@ -29,6 +33,20 @@
 @property (nonatomic) int _targetHeight;
 @property (nonatomic) int _targetFps;
 
+
+#pragma mark - event streams
+@property (nonatomic, strong) FlutterSinkDataHandler* whiteBalanceModeHandler;
+@property (nonatomic, strong) FlutterSinkDataHandler* whiteBalanceGainsHandler;
+
+@property (nonatomic, strong) FlutterSinkDataHandler* focusModeHandler;
+@property (nonatomic, strong) FlutterSinkDataHandler* focusLensPositionHandler;
+
+@property (nonatomic, strong) FlutterSinkDataHandler* exposureModeHandler;
+@property (nonatomic, strong) FlutterSinkDataHandler* exposureDurationHandler;
+@property (nonatomic, strong) FlutterSinkDataHandler* ISOHandler;
+@property (nonatomic, strong) FlutterSinkDataHandler* exposureTargetBiasHandler;
+@property (nonatomic, strong) FlutterSinkDataHandler* exposureTargetOffsetHandler;
+
 - (RTCMediaStream*)streamForId:(NSString*)streamId peerConnectionId:(NSString *)peerConnectionId;
 - (NSDictionary*)mediaStreamToMap:(RTCMediaStream *)stream ownerTag:(NSString*)ownerTag;
 - (NSDictionary*)mediaTrackToMap:(RTCMediaStreamTrack*)track;
@@ -36,3 +54,4 @@
 - (NSDictionary*)transceiverToMap:(RTCRtpTransceiver*)transceiver;
 
 @end
+NS_ASSUME_NONNULL_END

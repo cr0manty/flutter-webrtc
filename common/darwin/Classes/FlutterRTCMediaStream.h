@@ -3,6 +3,8 @@
 
 @interface FlutterWebRTCPlugin (RTCMediaStream)
 
+-(void) setVideoDevice:(AVCaptureDevice *)videoDevice;
+
 -(void)getUserMedia:(NSDictionary *)constraints
              result:(FlutterResult)result;
 #if TARGET_OS_IPHONE
@@ -20,15 +22,14 @@
                           torch:(BOOL) torch
                          result:(FlutterResult) result;
 
--(void)mediaStreamTrackSwitchCamera:(RTCMediaStreamTrack *)track
-                             result:(FlutterResult) result;
+-(void)mediaStreamTrackChangeCamera:(AVCaptureDevice*) device
+                             result:(FlutterResult)result;
 
--(void)mediaStreamChangeFocus:(FlutterResult)result;
-
--(void)mediaStreamChangeZoom:(CGFloat)zoom
-                            result:(FlutterResult)result;
+-(void)mediaStreamTrackSwitchCamera:(FlutterResult) result;
 
 -(void)mediaStreamTrackCaptureFrame:(RTCMediaStreamTrack *)track
                              toPath:(NSString *) path
                              result:(FlutterResult) result;
+-(void)mediaStreamDispose;
+
 @end
