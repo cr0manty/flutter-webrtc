@@ -96,7 +96,17 @@
     NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
 
       switch (routeChangeReason) {
-          case AVAudioSessionRouteChangeReasonCategoryChange: {
+        case AVAudioSessionRouteChangeReasonCategoryChange: {
+            AVAudioSession *session = [AVAudioSession sharedInstance];
+            if ([session category] != AVAudioSessionCategoryMultiRoute) {
+                NSError* setCategoryError;
+                [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
+                           error:&setCategoryError];
+                if(setCategoryError != nil) {
+                    NSLog(@"setCategoryError: %@", setCategoryError);
+                }
+            }
+          
               NSError* error;
               [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
               break;
