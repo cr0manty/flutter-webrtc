@@ -9,9 +9,9 @@ class WebRTC {
 
   static bool get platformIsDesktop =>
       Platform.isWindows ||
-          Platform.isLinux ||
-          Platform.isMacOS ||
-          Platform.isLinux;
+      Platform.isLinux ||
+      Platform.isMacOS ||
+      Platform.isLinux;
 
   static bool get platformIsWindows => Platform.isWindows;
 
@@ -25,7 +25,8 @@ class WebRTC {
 
   static bool get platformIsWeb => false;
 
-  static Future<T> invokeMethod<T, P>(String methodName, [
+  static Future<T?> invokeMethod<T, P>(
+    String methodName, [
     dynamic param,
   ]) async {
     await initialize();

@@ -80,6 +80,7 @@
         self.viewController = viewController;
 #endif
     }
+    
     self.peerConnections = [NSMutableDictionary new];
     self.localStreams = [NSMutableDictionary new];
     self.localTracks = [NSMutableDictionary new];
@@ -87,9 +88,10 @@
 #if TARGET_OS_IPHONE
     AVAudioSession *session = [AVAudioSession sharedInstance];
 
-    [session setPreferredSampleRate:192000 error:nil];
-    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
-    [session setActive:YES withOptions:kAudioSessionSetActiveFlag_NotifyOthersOnDeactivation error:nil];
+    // TODO: fix external mic
+//    [session setPreferredSampleRate:192000 error:nil];
+//    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
+//    [session setActive:YES withOptions:kAudioSessionSetActiveFlag_NotifyOthersOnDeactivation error:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
@@ -102,8 +104,13 @@
          RTCDefaultVideoDecoderFactory *decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
          RTCDefaultVideoEncoderFactory *encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
 
+         RTCVideoEncoderFactorySimulcast *simulcastFactory = [[RTCVideoEncoderFactorySimulcast alloc]
+                                                              initWithPrimary:encoderFactory
+                                                              fallback:encoderFactory];
+         
          _peerConnectionFactory = [[RTCPeerConnectionFactory alloc]
-                                   initWithEncoderFactory:encoderFactory
+                                   initWithBypassVoiceProcessing:bypassVoiceProcessing
+                                   encoderFactory:simulcastFactory
                                    decoderFactory:decoderFactory];
      }
  }
@@ -138,31 +145,6 @@
         default:
           break;
       }
-
-//    switch (routeChangeReason) {
-//        case AVAudioSessionRouteChangeReasonCategoryChange: {
-//            AVAudioSession *session = [AVAudioSession sharedInstance];
-//            if ([session category] != AVAudioSessionCategoryMultiRoute) {
-//                NSError* setCategoryError;
-//                [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
-//                           error:&setCategoryError];
-//                if(setCategoryError != nil) {
-//                    NSLog(@"setCategoryError: %@", setCategoryError);
-//                }
-//            }
-//
-//            NSError* error;
-//            [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
-//            if(error != nil) {
-//                NSLog(@"setCategoryError: %@", error);
-//            }
-//            break;
-//            }
-//        case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
-//                  [AudioUtils setPreferHeadphoneInput];
-//                  break;
-//              }
-//        }
 #endif
 }
 

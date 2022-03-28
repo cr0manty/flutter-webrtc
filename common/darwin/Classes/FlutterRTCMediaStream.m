@@ -680,7 +680,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
             [self.videoCapturer setCameraPosition: position];
             result([NSNumber numberWithBool:self._usingFrontCamera]);
         }
-    }
+    }];
 }
 
 -(void)mediaStreamTrackCaptureFrame:(RTCVideoTrack *)track toPath:(NSString *) path result:(FlutterResult)result
