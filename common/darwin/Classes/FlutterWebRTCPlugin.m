@@ -626,10 +626,9 @@
         RTCIceCandidate* candidate = [[RTCIceCandidate alloc] initWithSdp:sdp sdpMLineIndex:sdpMLineIndex sdpMid:sdpMid];
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
 
-        if(peerConnection)
-        {
+        if(peerConnection) {
             [self peerConnectionAddICECandidate:candidate peerConnection:peerConnection result:result];
-        }else{
+        } else {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
                                        message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
                                        details:nil]);

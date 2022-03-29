@@ -62,7 +62,7 @@ class WhiteBalanceHelper extends BaseVideoHelper {
     );
 
     if (index == null || AVCaptureWhiteBalanceMode.values.length < index) {
-      throw 'getWhiteBalanceMode error: Mode not found';
+      return AVCaptureWhiteBalanceMode.continuous_auto_white_balance;
     }
 
     final mode = AVCaptureWhiteBalanceMode.values[index];

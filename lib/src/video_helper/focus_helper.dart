@@ -92,7 +92,7 @@ class FocusHelper extends BaseVideoHelper {
     );
 
     if (index == null || AVCaptureFocusMode.values.length < index) {
-      throw 'getFocusMode error: Mode not found';
+      return AVCaptureFocusMode.continuous_auto_focus;
     }
 
     final mode = AVCaptureFocusMode.values[index];

@@ -578,6 +578,26 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     result(@{@"sources": sources});
 }
 
+-(void)mediaStreamTrackSwitchCamera:(FlutterResult)result
+{
+    if (!self.videoCapturer) {
+        NSLog(@"Video capturer is null. Can't switch camera");
+        return;
+    }
+    self._usingFrontCamera = !self._usingFrontCamera;
+    AVCaptureDevicePosition position = self._usingFrontCamera ? AVCaptureDevicePositionFront : AVCaptureDevicePositionBack;
+    AVCaptureDevice *videoDevice = [self findDeviceForPosition:position];
+    AVCaptureDeviceFormat *selectedFormat = [self selectFormatForDevice:videoDevice];
+    [self.videoCapturer startCaptureWithDevice:videoDevice format:selectedFormat fps:[self selectFpsForFormat:selectedFormat] completionHandler:^(NSError* error){
+        if (error != nil) {
+            result([FlutterError errorWithCode:@"Error while switching camera" message:@"Error while switching camera" details:error]);
+        } else {
+            [self.videoCapturer setCameraPosition: position];
+            result([NSNumber numberWithBool:self._usingFrontCamera]);
+        }
+    }];
+}
+
 -(void)mediaStreamTrackRelease:(RTCMediaStream *)mediaStream  track:(RTCMediaStreamTrack *)track
 {
   // what's different to mediaStreamTrackStop? only call mediaStream explicitly?
