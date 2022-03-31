@@ -101,4 +101,10 @@ class RTCDataChannelNative extends RTCDataChannel {
       'dataChannelId': _dataChannelId
     });
   }
+
+  @override
+  int? get bufferedAmount => null;
+
+  @override
+  int? get id => _dataChannelId;
 }
