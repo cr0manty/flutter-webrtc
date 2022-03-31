@@ -38,6 +38,24 @@
 #endif
 }
 
++(void)ensureAudioSessionWithExternalMic:(BOOL)willUseExternalMic
+                           withRecording:(BOOL)recording {
+    if (!willUseExternalMic) {
+        [AudioUtils ensureAudioSessionWithRecording:recording];
+    } else {
+        RTCAudioSession *session = [RTCAudioSession sharedInstance];
+        RTCAudioSessionConfiguration *config = [RTCAudioSessionConfiguration webRTCConfiguration];
+        
+        config.category = AVAudioSessionCategoryMultiRoute;
+        config.categoryOptions = AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers;
+
+        [session setCategory:config.category
+          withOptions:config.categoryOptions
+          error:nil];
+        [session setMode:config.mode error:nil];
+    }
+}
+
 + (void)setPreferHeadphoneInput {
 #if TARGET_OS_IPHONE
   AVAudioSession *session = [AVAudioSession sharedInstance];

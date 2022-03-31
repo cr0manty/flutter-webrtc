@@ -88,17 +88,12 @@
 #if TARGET_OS_IPHONE
     AVAudioSession *session = [AVAudioSession sharedInstance];
 
-    // TODO: fix external mic
-//    [session setPreferredSampleRate:192000 error:nil];
-//    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
-//    [session setActive:YES withOptions:kAudioSessionSetActiveFlag_NotifyOthersOnDeactivation error:nil];
-    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
     return self;
 }
 
--(void) ensureInitialized:(BOOL)bypassVoiceProcessing {
+-(void)ensureInitialized:(BOOL)bypassVoiceProcessing {
      //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
      if (!_peerConnectionFactory) {
          RTCDefaultVideoDecoderFactory *decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];

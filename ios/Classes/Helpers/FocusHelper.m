@@ -110,12 +110,14 @@
 
 -(BOOL)setFocusPoint:(AVCaptureDevice*)device
                point:(CGPoint)point {
-    if (!device.isFocusPointOfInterestSupported) {
+    if (!device.isFocusPointOfInterestSupported || !device.isExposurePointOfInterestSupported) {
         @throw [NSException exceptionWithName:@"Set focus point failed"
                                        reason:@"Device does not have focus point capabilities"
                                      userInfo:nil];
 
     }
+    
+    
     
     NSError *error = nil;
     

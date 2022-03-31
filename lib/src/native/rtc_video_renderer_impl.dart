@@ -66,18 +66,6 @@ class RTCVideoRenderer extends ValueNotifier<RTCVideoValue>
   }
 
   @override
-  Future<void> setLandscapeMode(bool isLandscapeSupported) async {
-    if (kIsWeb || Platform.isAndroid) return;
-
-    if (textureId == null) throw 'Call initialize before setting the stream';
-
-    await WebRTC.invokeMethod('setLandscapeMode', <String, dynamic>{
-      'textureId': textureId,
-      'landscapeMode': isLandscapeSupported
-    });
-  }
-
-  @override
   Future<void> dispose() async {
     await _eventSubscription?.cancel();
     await WebRTC.invokeMethod(

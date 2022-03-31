@@ -258,9 +258,4 @@ class RTCVideoRenderer extends ValueNotifier<RTCVideoValue>
 
   @override
   Function? onResize;
-
-  /// only for native platforms
-  @override
-  Future<void> setLandscapeMode(bool isLandscapeSupported) =>
-      throw UnimplementedError();
 }
