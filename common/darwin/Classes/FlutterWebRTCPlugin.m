@@ -18,9 +18,9 @@
 #pragma clang diagnostic ignored "-Wprotocol"
 
 @implementation FlutterWebRTCPlugin {
-
+    
 #pragma clang diagnostic pop
-
+    
     FlutterMethodChannel *_methodChannel;
     WhiteBalanceHelper *_whiteBalanceHelper;
     CameraLensAndZoomHelper *_zoomHelper;
@@ -35,7 +35,7 @@
 @synthesize messenger = _messenger;
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-
+    
     FlutterMethodChannel* channel = [FlutterMethodChannel
                                      methodChannelWithName:@"FlutterWebRTC.Method"
                                      binaryMessenger:[registrar messenger]];
@@ -62,7 +62,7 @@
                  viewController:(UIViewController *)viewController
 #endif
                    withTextures:(NSObject<FlutterTextureRegistry> *)textures{
-
+    
     self = [super init];
     
     if (self) {
@@ -71,7 +71,7 @@
         _textures = textures;
         _messenger = messenger;
         _speakerOn = NO;
-
+        
         _whiteBalanceHelper = [WhiteBalanceHelper new];
         _zoomHelper = [CameraLensAndZoomHelper new];
         _focusHelper = [FocusHelper new];
@@ -87,37 +87,39 @@
     self.renders = [[NSMutableDictionary alloc] init];
 #if TARGET_OS_IPHONE
     AVAudioSession *session = [AVAudioSession sharedInstance];
-
+    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
     return self;
 }
 
 -(void)ensureInitialized:(BOOL)bypassVoiceProcessing {
-     //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
-     if (!_peerConnectionFactory) {
-         RTCDefaultVideoDecoderFactory *decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
-         RTCDefaultVideoEncoderFactory *encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
-
-         RTCVideoEncoderFactorySimulcast *simulcastFactory = [[RTCVideoEncoderFactorySimulcast alloc]
-                                                              initWithPrimary:encoderFactory
-                                                              fallback:encoderFactory];
-         
-         _peerConnectionFactory = [[RTCPeerConnectionFactory alloc]
-                                   initWithBypassVoiceProcessing:bypassVoiceProcessing
-                                   encoderFactory:simulcastFactory
-                                   decoderFactory:decoderFactory];
-     }
- }
+    //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
+    if (!_peerConnectionFactory) {
+        RTCDefaultVideoDecoderFactory *decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
+        RTCDefaultVideoEncoderFactory *encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
+        
+        RTCVideoEncoderFactorySimulcast *simulcastFactory = [[RTCVideoEncoderFactorySimulcast alloc]
+                                                             initWithPrimary:encoderFactory
+                                                             fallback:encoderFactory];
+        
+        _peerConnectionFactory = [[RTCPeerConnectionFactory alloc]
+                                  initWithBypassVoiceProcessing:bypassVoiceProcessing
+                                  encoderFactory:simulcastFactory
+                                  decoderFactory:decoderFactory];
+    }
+}
 
 
 - (void)didSessionRouteChange:(NSNotification *)notification {
 #if TARGET_OS_IPHONE
     NSDictionary *interuptionDict = notification.userInfo;
     NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
-
-      switch (routeChangeReason) {
+    
+    switch (routeChangeReason) {
         case AVAudioSessionRouteChangeReasonCategoryChange: {
+            
+            // TODO: rework
             AVAudioSession *session = [AVAudioSession sharedInstance];
             if ([session category] != AVAudioSessionCategoryMultiRoute) {
                 NSError* setCategoryError;
@@ -127,19 +129,19 @@
                     NSLog(@"setCategoryError: %@", setCategoryError);
                 }
             }
-
-              NSError* error;
-              [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
-              break;
-          }
-          case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
-              [AudioUtils setPreferHeadphoneInput];
-              break;
-          }
-
+            
+            NSError* error;
+            [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
+            break;
+        }
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
+            [AudioUtils setPreferHeadphoneInput];
+            break;
+        }
+            
         default:
-          break;
-      }
+            break;
+    }
 #endif
 }
 
@@ -147,25 +149,25 @@
     if (self.videoCapturer.captureSession.inputs.count < 1) {
         return result(nil);
     }
-
+    
     if ([@"#VideoHelper/getSupportedCameraLens" isEqualToString:call.method]) {
         NSArray *value = [_zoomHelper getSupportedCameraLens];
         return result(value);
     }
-
+    
     AVCaptureDeviceInput *deviceInput = [self.videoCapturer.captureSession.inputs objectAtIndex:0];
     AVCaptureDevice *device = deviceInput.device;
-
+    
     if ([@"#VideoHelper/isFocusModeSupported" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *mode = argsMap[@"mode"];
-
+        
         BOOL helpResult = [_focusHelper isFocusModeSupported:device modeNum:[mode intValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/setFocusMode" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *mode = argsMap[@"mode"];
-
+        
         BOOL helpResult = [_focusHelper setFocusMode: device modeNum:[mode intValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/setFocusPoint" isEqualToString:call.method]) {
@@ -173,19 +175,19 @@
         CGPoint point;
         point.x = [argsMap[@"x"] floatValue];
         point.y = [argsMap[@"y"] floatValue];
-
+        
         BOOL helpResult = [_focusHelper setFocusPoint:device point:point];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/isWhiteBalanceModeSupported" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *mode = argsMap[@"mode"];
-
+        
         BOOL helpResult = [_whiteBalanceHelper isWhiteBalanceModeSupported:device modeNum:[mode intValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/setWhiteBalanceMode" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *mode = argsMap[@"mode"];
-
+        
         BOOL helpResult = [_whiteBalanceHelper setWhiteBalanceMode:device modeNum:[mode intValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/setWhiteBalanceGains" isEqualToString:call.method]) {
@@ -194,44 +196,44 @@
         gains.greenGain = [argsMap[@"greenGain"] floatValue];
         gains.redGain = [argsMap[@"redGain"] floatValue];
         gains.blueGain = [argsMap[@"blueGain"] floatValue];
-
+        
         BOOL helpResult = [_whiteBalanceHelper setWhiteBalance:device gains:gains];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/changeWhiteBalanceTemperatureAndTint" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *temperature = argsMap[@"temperature"];
         NSNumber *tint = argsMap[@"tint"];
-
+        
         BOOL helpResult = [_whiteBalanceHelper changeWhiteBalanceTemperature:device temperature:[temperature floatValue] tint:[tint floatValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/isExposureModeSupported" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *mode = argsMap[@"mode"];
-
+        
         BOOL helpResult = [_exposureHelper isExposureModeSupported:device modeNum:[mode intValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/setExposureMode" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *mode = argsMap[@"mode"];
-
+        
         BOOL helpResult = [_exposureHelper setExposureMode:device modeNum:[mode intValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/changeISO" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *vlue = argsMap[@"value"];
-
+        
         BOOL helpResult = [_exposureHelper changeISO:device value:[vlue floatValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/changeBias" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *vlue = argsMap[@"value"];
-
+        
         BOOL helpResult = [_exposureHelper changeBias:device value:[vlue floatValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/changeExposureDuration" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *vlue = argsMap[@"value"];
-
+        
         BOOL helpResult = [_exposureHelper changeExposureDuration:device value:[vlue floatValue]];
         result([NSNumber numberWithBool:helpResult]);
     } else if ([@"#VideoHelper/getMaxBalanceGains" isEqualToString:call.method]) {
@@ -270,13 +272,13 @@
     } else if ([@"#VideoHelper/setFocusPointLockedWithLensPosition" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSNumber *position = argsMap[@"position"];
-
+        
         BOOL value = [_focusHelper setFocusPointLocked:device lensPosition:[position floatValue]];
         result([NSNumber numberWithBool:value]);
     } else if ([@"#VideoHelper/changeZoom" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         float zoom = [argsMap[@"zoom"] floatValue];
-
+        
         BOOL value = [_zoomHelper setZoom:device zoom:zoom];
         result([NSNumber numberWithBool:value]);
     } else if ([@"#VideoHelper/convertDeviceGainsToTemperature" isEqualToString:call.method]) {
@@ -285,7 +287,7 @@
         deviceGains.greenGain = [argsMap[@"greenGain"] floatValue];
         deviceGains.redGain = [argsMap[@"redGain"] floatValue];
         deviceGains.blueGain = [argsMap[@"blueGain"] floatValue];
-
+        
         AVCaptureWhiteBalanceTemperatureAndTintValues gains = [device temperatureAndTintValuesForDeviceWhiteBalanceGains:deviceGains];
         result(@{@"tint": [NSNumber numberWithFloat: gains.tint], @"temperature": [NSNumber numberWithFloat: gains.temperature]});
     } else if ([@"#VideoHelper/getISO" isEqualToString:call.method]) {
@@ -303,7 +305,7 @@
     } else if ([@"#VideoHelper/getExposureDuration" isEqualToString:call.method]) {
         CMTime value = [_exposureHelper getExposureDuration:device];
         float seconds = CMTimeGetSeconds(value);
-
+        
         result(@{@"value": [NSNumber numberWithInteger:value.value], @"timescale": [NSNumber numberWithInteger:value.timescale], @"seconds": [NSNumber numberWithFloat:seconds]});
     } else if ([@"#VideoHelper/getMinISO" isEqualToString:call.method]) {
         float value = [_exposureHelper getMinISO:device];
@@ -320,39 +322,39 @@
     } else if ([@"#VideoHelper/maxExposureDuration" isEqualToString:call.method]) {
         CMTime value = [_exposureHelper minExposureDuration:device];
         float seconds = CMTimeGetSeconds(value);
-
+        
         result(@{@"value": [NSNumber numberWithInteger:value.value], @"timescale": [NSNumber numberWithInteger:value.timescale], @"seconds": [NSNumber numberWithFloat:seconds]});
     } else if ([@"#VideoHelper/minExposureDuration" isEqualToString:call.method]) {
         CMTime value = [_exposureHelper minExposureDuration:device];
         float seconds = CMTimeGetSeconds(value);
-
+        
         result(@{@"value": [NSNumber numberWithInteger:value.value], @"timescale": [NSNumber numberWithInteger:value.timescale], @"seconds": [NSNumber numberWithFloat:seconds]});
     } else if ([@"#VideoHelper/getExposureDurationSeconds" isEqualToString:call.method]) {
         NSDictionary *value = [_exposureHelper getExposureDurationSeconds:device];
-
+        
         result(value);
     } else if ([@"#VideoHelper/getSupportedFocusMode" isEqualToString:call.method]) {
         NSArray *value = [_focusHelper getSupportedFocusMode:device];
-
+        
         result(value);
     } else if ([@"#VideoHelper/getSupportedExposureMode" isEqualToString:call.method]) {
         NSArray *value = [_exposureHelper getSupportedExposureMode:device];
-
+        
         result(value);
     } else if ([@"#VideoHelper/getSupportedWhiteBalanceMode" isEqualToString:call.method]) {
         NSArray *value = [_whiteBalanceHelper getSupportedWhiteBalanceMode:device];
-
+        
         result(value);
     } else if ([@"#VideoHelper/getCurrentDeviceType" isEqualToString:call.method]) {
         AVCaptureDeviceType value = [_zoomHelper getCurrentDeviceType:device];
-
+        
         result(value);
     } else if ([@"#VideoHelper/setCameraByName" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSString* name = argsMap[@"nativeName"];
-
+        
         AVCaptureDevice *device = [_zoomHelper getCameraByName:name];
-
+        
         if (device) {
             [self mediaStreamTrackChangeCamera: device result:result];
         } else {
@@ -362,11 +364,11 @@
         }
     } else if ([@"#VideoHelper/isWhiteBalanceLockSupported" isEqualToString:call.method]) {
         BOOL value = [_whiteBalanceHelper isWhiteBalanceLockSupported:device];
-
+        
         result([NSNumber numberWithBool:value]);
     } else if ([@"#VideoHelper/isLockingFocusWithCustomLensPositionSupported" isEqualToString:call.method]) {
         BOOL value = [_focusHelper isLockingFocusWithCustomLensPositionSupported:device];
-
+        
         result([NSNumber numberWithBool:value]);
     } else if ([@"#VideoHelper/isFocusPointOfInterestSupported" isEqualToString:call.method]) {
         BOOL value = [_focusHelper isFocusPointOfInterestSupported:device];
@@ -380,7 +382,7 @@
                 return;
             }
             AVCaptureConnection *connection = [self.videoCapturer.captureSession.connections objectAtIndex:0];
-
+            
             if ([@"#VideoHelper/getSupportedStabilizationMode" isEqualToString:call.method]) {
                 NSArray* value = [_zoomHelper getSupportedStabilizationMode:connection];
                 result(value);
@@ -388,9 +390,9 @@
                 NSDictionary* argsMap = call.arguments;
                 NSNumber *mode = argsMap[@"mode"];
                 BOOL value = FALSE;
-
+                
                 value = [_zoomHelper setPreferredStabilizationMode:connection modeNum:[mode intValue]];
-
+                
                 result([NSNumber numberWithBool:value]);
             } else if ([@"#VideoHelper/getPreferredStabilizationMode" isEqualToString:call.method]) {
                 AVCaptureVideoStabilizationMode value = [_zoomHelper getPreferredStabilizationMode:connection];
@@ -405,14 +407,14 @@
             return result(nil);
         }
     }
-
+    
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult) result {
     if ([call.method containsString:@"#VideoHelper"]) {
         return [self handleVideoHelperMethodCall:call result:result];
     }
-
+    
     if ([@"initialize" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSDictionary* options = argsMap[@"options"];
@@ -533,7 +535,7 @@
         NSDictionary* argsMap = call.arguments;
         NSString* path = argsMap[@"path"];
         NSString* trackId = argsMap[@"trackId"];
-
+        
         RTCMediaStreamTrack *track = [self trackForId: trackId];
         if (track != nil && [track isKindOfClass:[RTCVideoTrack class]]) {
             RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
@@ -587,22 +589,22 @@
         
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection) {
-
-             RTCRtpSender* audioSender = nil ;
+            
+            RTCRtpSender* audioSender = nil ;
             for( RTCRtpSender *rtpSender in peerConnection.senders){
                 if([[[rtpSender track] kind] isEqualToString:@"audio"]) {
                     audioSender = rtpSender;
                 }
             }
             if(audioSender){
-            NSOperationQueue *queue = [[NSOperationQueue alloc] init];
-            [queue addOperationWithBlock:^{
-                double durationMs = duration / 1000.0;
-                double interToneGapMs = interToneGap / 1000.0;
-                [audioSender.dtmfSender insertDtmf :(NSString *)tone
-                duration:(NSTimeInterval) durationMs interToneGap:(NSTimeInterval)interToneGapMs];
-                NSLog(@"DTMF Tone played ");
-            }];
+                NSOperationQueue *queue = [[NSOperationQueue alloc] init];
+                [queue addOperationWithBlock:^{
+                    double durationMs = duration / 1000.0;
+                    double interToneGapMs = interToneGap / 1000.0;
+                    [audioSender.dtmfSender insertDtmf :(NSString *)tone
+                                               duration:(NSTimeInterval) durationMs interToneGap:(NSTimeInterval)interToneGapMs];
+                    NSLog(@"DTMF Tone played ");
+                }];
             }
             
             result(@{@"result": @"success"});
@@ -620,7 +622,7 @@
         NSString *sdpMid = candMap[@"sdpMid"];
         RTCIceCandidate* candidate = [[RTCIceCandidate alloc] initWithSdp:sdp sdpMLineIndex:sdpMLineIndex sdpMid:sdpMid];
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
-
+        
         if(peerConnection) {
             [self peerConnectionAddICECandidate:candidate peerConnection:peerConnection result:result];
         } else {
@@ -652,7 +654,7 @@
         NSNumber* dataChannelId = argsMap[@"dataChannelId"];
         NSString* type = argsMap[@"type"];
         id data = argsMap[@"data"];
-
+        
         [self dataChannelSend:peerConnectionId
                 dataChannelId:dataChannelId
                          data:data
@@ -678,7 +680,7 @@
                 if(source){
                     shouldCallResult = NO;
                     [self.videoCapturer stopCaptureWithCompletionHandler:^{
-                      result(nil);
+                        result(nil);
                     }];
                     self.videoCapturer = nil;
                 }
@@ -689,8 +691,8 @@
             [self.localStreams removeObjectForKey:streamId];
         }
         if (shouldCallResult) {
-          // do not call if will be called in stopCapturer above.
-          result(nil);
+            // do not call if will be called in stopCapturer above.
+            result(nil);
         }
     } else if ([@"mediaStreamTrackSetEnable" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -705,7 +707,7 @@
         NSDictionary* argsMap = call.arguments;
         NSString* streamId = argsMap[@"streamId"];
         NSString* trackId = argsMap[@"trackId"];
-
+        
         RTCMediaStream *stream = self.localStreams[streamId];
         if (stream) {
             RTCMediaStreamTrack *track = [self trackForId: trackId];
@@ -786,7 +788,7 @@
         result(nil);
     } else if ([@"createVideoRenderer" isEqualToString:call.method]){
         FlutterRTCVideoRenderer* render = [self createWithTextureRegistry:_textures
-                                          messenger:_messenger];
+                                                                messenger:_messenger];
         self.renders[@(render.textureId)] = render;
         result(@{@"textureId": @(render.textureId)});
     } else if ([@"videoRendererDispose" isEqualToString:call.method]){
@@ -943,8 +945,8 @@
             result(nil);
         } else {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-                                           message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-                                           details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
         }
     } else if ([@"addTrack" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -954,26 +956,26 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         
         RTCMediaStreamTrack *track = [self trackForId:trackId];
         if(track == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: track not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: track not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpSender* sender = [peerConnection addTrack:track streamIds:streamIds];
         if(sender == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection.addTrack failed!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection.addTrack failed!"]
+                                       details:nil]);
             return;
         }
-
+        
         result([self rtpSenderToMap:sender]);
     } else if ([@"removeTrack" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -982,15 +984,15 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpSender *sender = [self getRtpSenderById:peerConnection Id:senderId];
         if(sender == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: sender not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: sender not found!"]
+                                       details:nil]);
             return;
         }
         result(@{@"result": @([peerConnection removeTrack:sender])});
@@ -1003,8 +1005,8 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpTransceiver* transceiver = nil;
@@ -1021,7 +1023,7 @@
                 hasAudio = YES;
             }
         } else if (mediaType != nil) {
-             RTCRtpMediaType rtpMediaType = [self stringToRtpMediaType:mediaType];
+            RTCRtpMediaType rtpMediaType = [self stringToRtpMediaType:mediaType];
             if (transceiverInit != nil) {
                 RTCRtpTransceiverInit *init = [self mapToTransceiverInit:transceiverInit];
                 transceiver = [peerConnection addTransceiverOfType:(rtpMediaType) init:init];
@@ -1033,15 +1035,15 @@
             }
         } else {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: Incomplete parameters!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: Incomplete parameters!"]
+                                       details:nil]);
             return;
         }
         
         if (transceiver == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: can't addTransceiver!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: can't addTransceiver!"]
+                                       details:nil]);
             return;
         }
         
@@ -1054,15 +1056,15 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpTransceiver *transcevier = [self getRtpTransceiverById:peerConnection Id:transceiverId];
         if(transcevier == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: transcevier not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: transcevier not found!"]
+                                       details:nil]);
             return;
         }
         [transcevier setDirection:[self stringToTransceiverDirection:direction] error:nil];
@@ -1074,18 +1076,18 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpTransceiver *transcevier = [self getRtpTransceiverById:peerConnection Id:transceiverId];
         if(transcevier == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: transcevier not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: transcevier not found!"]
+                                       details:nil]);
             return;
         }
-
+        
         if([@"rtpTransceiverGetDirection" isEqualToString:call.method]){
             result(@{@"result": [self transceiverDirectionString:transcevier.direction]});
         } else if ([@"rtpTransceiverGetCurrentDirection" isEqualToString:call.method]) {
@@ -1103,15 +1105,15 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpTransceiver *transcevier = [self getRtpTransceiverById:peerConnection Id:transceiverId];
         if(transcevier == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: transcevier not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: transcevier not found!"]
+                                       details:nil]);
             return;
         }
         [transcevier stopInternal];
@@ -1124,19 +1126,19 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpSender *sender = [self getRtpSenderById:peerConnection Id:senderId];
         if(sender == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: sender not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: sender not found!"]
+                                       details:nil]);
             return;
         }
         [sender setParameters:[self updateRtpParameters:sender.parameters with:parameters]];
-
+        
         result(@{@"result": @(YES)});
     } else if ([@"rtpSenderReplaceTrack" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -1146,22 +1148,22 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpSender *sender = [self getRtpSenderById:peerConnection Id:senderId];
         if(sender == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: sender not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: sender not found!"]
+                                       details:nil]);
             return;
         }
         RTCMediaStreamTrack *track = [self trackForId:trackId];
         if(track == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: track not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: track not found!"]
+                                       details:nil]);
             return;
         }
         [sender setTrack:track];
@@ -1174,22 +1176,22 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpSender *sender = [self getRtpSenderById:peerConnection Id:senderId];
         if(sender == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: sender not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: sender not found!"]
+                                       details:nil]);
             return;
         }
         RTCMediaStreamTrack *track = [self trackForId:trackId];
         if(track == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: track not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: track not found!"]
+                                       details:nil]);
             return;
         }
         [sender setTrack:track];
@@ -1201,15 +1203,15 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         RTCRtpSender *sender = [self getRtpSenderById:peerConnection Id:senderId];
         if(sender == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: sender not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: sender not found!"]
+                                       details:nil]);
             return;
         }
         [peerConnection removeTrack:sender];
@@ -1220,8 +1222,8 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         
@@ -1229,7 +1231,7 @@
         for (RTCRtpSender *sender in peerConnection.senders) {
             [senders addObject:[self rtpSenderToMap:sender]];
         }
-
+        
         result(@{ @"senders":senders});
     } else if ([@"getReceivers" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -1237,8 +1239,8 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         
@@ -1246,7 +1248,7 @@
         for (RTCRtpReceiver *receiver in peerConnection.receivers) {
             [receivers addObject:[self receiverToMap:receiver]];
         }
-
+        
         result(@{ @"receivers":receivers});
     } else if ([@"getTransceivers" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -1254,8 +1256,8 @@
         RTCPeerConnection *peerConnection = self.peerConnections[peerConnectionId];
         if(peerConnection == nil) {
             result([FlutterError errorWithCode:[NSString stringWithFormat:@"%@Failed",call.method]
-            message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
-            details:nil]);
+                                       message:[NSString stringWithFormat:@"Error: peerConnection not found!"]
+                                       details:nil]);
             return;
         }
         
@@ -1263,7 +1265,7 @@
         for (RTCRtpTransceiver *transceiver in peerConnection.transceivers) {
             [transceivers addObject:[self transceiverToMap:transceiver]];
         }
-
+        
         result(@{ @"transceivers":transceivers});
     } else {
         result(FlutterMethodNotImplemented);
@@ -1298,26 +1300,26 @@
             NSString *trackId = track.trackId;
             [self.localTracks setObject:track forKey:trackId];
             [audioTracks addObject:@{
-                                     @"enabled": @(track.isEnabled),
-                                     @"id": trackId,
-                                     @"kind": track.kind,
-                                     @"label": trackId,
-                                     @"readyState": @"live",
-                                     @"remote": @(NO)
-                                     }];
+                @"enabled": @(track.isEnabled),
+                @"id": trackId,
+                @"kind": track.kind,
+                @"label": trackId,
+                @"readyState": @"live",
+                @"remote": @(NO)
+            }];
         }
         
         for (RTCMediaStreamTrack *track in stream.videoTracks) {
             NSString *trackId = track.trackId;
             [self.localTracks setObject:track forKey:trackId];
             [videoTracks addObject:@{
-                                     @"enabled": @(track.isEnabled),
-                                     @"id": trackId,
-                                     @"kind": track.kind,
-                                     @"label": trackId,
-                                     @"readyState": @"live",
-                                     @"remote": @(NO)
-                                     }];
+                @"enabled": @(track.isEnabled),
+                @"id": trackId,
+                @"kind": track.kind,
+                @"label": trackId,
+                @"readyState": @"live",
+                @"remote": @(NO)
+            }];
         }
         
         result(@{@"audioTracks": audioTracks, @"videoTracks" : videoTracks });
@@ -1402,40 +1404,40 @@
 
 - (nonnull RTCConfiguration *)RTCConfiguration:(id)json
 {
-   RTCConfiguration *config = [[RTCConfiguration alloc] init];
-
-  if (!json) {
-    return config;
-  }
-
-  if (![json isKindOfClass:[NSDictionary class]]) {
-    NSLog(@"must be an object");
-    return config;
-  }
-
-  if (json[@"audioJitterBufferMaxPackets"] != nil && [json[@"audioJitterBufferMaxPackets"] isKindOfClass:[NSNumber class]]) {
-    config.audioJitterBufferMaxPackets = [json[@"audioJitterBufferMaxPackets"] intValue];
-  }
-
-  if (json[@"bundlePolicy"] != nil && [json[@"bundlePolicy"] isKindOfClass:[NSString class]]) {
-    NSString *bundlePolicy = json[@"bundlePolicy"];
-    if ([bundlePolicy isEqualToString:@"balanced"]) {
-      config.bundlePolicy = RTCBundlePolicyBalanced;
-    } else if ([bundlePolicy isEqualToString:@"max-compat"]) {
-      config.bundlePolicy = RTCBundlePolicyMaxCompat;
-    } else if ([bundlePolicy isEqualToString:@"max-bundle"]) {
-      config.bundlePolicy = RTCBundlePolicyMaxBundle;
+    RTCConfiguration *config = [[RTCConfiguration alloc] init];
+    
+    if (!json) {
+        return config;
     }
-  }
-
-  if (json[@"iceBackupCandidatePairPingInterval"] != nil && [json[@"iceBackupCandidatePairPingInterval"] isKindOfClass:[NSNumber class]]) {
-    config.iceBackupCandidatePairPingInterval = [json[@"iceBackupCandidatePairPingInterval"] intValue];
-  }
-
-  if (json[@"iceConnectionReceivingTimeout"] != nil && [json[@"iceConnectionReceivingTimeout"] isKindOfClass:[NSNumber class]]) {
-    config.iceConnectionReceivingTimeout = [json[@"iceConnectionReceivingTimeout"] intValue];
-  }
-
+    
+    if (![json isKindOfClass:[NSDictionary class]]) {
+        NSLog(@"must be an object");
+        return config;
+    }
+    
+    if (json[@"audioJitterBufferMaxPackets"] != nil && [json[@"audioJitterBufferMaxPackets"] isKindOfClass:[NSNumber class]]) {
+        config.audioJitterBufferMaxPackets = [json[@"audioJitterBufferMaxPackets"] intValue];
+    }
+    
+    if (json[@"bundlePolicy"] != nil && [json[@"bundlePolicy"] isKindOfClass:[NSString class]]) {
+        NSString *bundlePolicy = json[@"bundlePolicy"];
+        if ([bundlePolicy isEqualToString:@"balanced"]) {
+            config.bundlePolicy = RTCBundlePolicyBalanced;
+        } else if ([bundlePolicy isEqualToString:@"max-compat"]) {
+            config.bundlePolicy = RTCBundlePolicyMaxCompat;
+        } else if ([bundlePolicy isEqualToString:@"max-bundle"]) {
+            config.bundlePolicy = RTCBundlePolicyMaxBundle;
+        }
+    }
+    
+    if (json[@"iceBackupCandidatePairPingInterval"] != nil && [json[@"iceBackupCandidatePairPingInterval"] isKindOfClass:[NSNumber class]]) {
+        config.iceBackupCandidatePairPingInterval = [json[@"iceBackupCandidatePairPingInterval"] intValue];
+    }
+    
+    if (json[@"iceConnectionReceivingTimeout"] != nil && [json[@"iceConnectionReceivingTimeout"] isKindOfClass:[NSNumber class]]) {
+        config.iceConnectionReceivingTimeout = [json[@"iceConnectionReceivingTimeout"] intValue];
+    }
+    
     if (json[@"iceServers"] != nil && [json[@"iceServers"] isKindOfClass:[NSArray class]]) {
         NSMutableArray<RTCIceServer *> *iceServers = [NSMutableArray new];
         for (id server in json[@"iceServers"]) {
@@ -1446,163 +1448,163 @@
         }
         config.iceServers = iceServers;
     }
-
-  if (json[@"iceTransportPolicy"] != nil && [json[@"iceTransportPolicy"] isKindOfClass:[NSString class]]) {
-    NSString *iceTransportPolicy = json[@"iceTransportPolicy"];
-    if ([iceTransportPolicy isEqualToString:@"all"]) {
-      config.iceTransportPolicy = RTCIceTransportPolicyAll;
-    } else if ([iceTransportPolicy isEqualToString:@"none"]) {
-      config.iceTransportPolicy = RTCIceTransportPolicyNone;
-    } else if ([iceTransportPolicy isEqualToString:@"nohost"]) {
-      config.iceTransportPolicy = RTCIceTransportPolicyNoHost;
-    } else if ([iceTransportPolicy isEqualToString:@"relay"]) {
-      config.iceTransportPolicy = RTCIceTransportPolicyRelay;
+    
+    if (json[@"iceTransportPolicy"] != nil && [json[@"iceTransportPolicy"] isKindOfClass:[NSString class]]) {
+        NSString *iceTransportPolicy = json[@"iceTransportPolicy"];
+        if ([iceTransportPolicy isEqualToString:@"all"]) {
+            config.iceTransportPolicy = RTCIceTransportPolicyAll;
+        } else if ([iceTransportPolicy isEqualToString:@"none"]) {
+            config.iceTransportPolicy = RTCIceTransportPolicyNone;
+        } else if ([iceTransportPolicy isEqualToString:@"nohost"]) {
+            config.iceTransportPolicy = RTCIceTransportPolicyNoHost;
+        } else if ([iceTransportPolicy isEqualToString:@"relay"]) {
+            config.iceTransportPolicy = RTCIceTransportPolicyRelay;
+        }
     }
-  }
-
-  if (json[@"rtcpMuxPolicy"] != nil && [json[@"rtcpMuxPolicy"] isKindOfClass:[NSString class]]) {
-    NSString *rtcpMuxPolicy = json[@"rtcpMuxPolicy"];
-    if ([rtcpMuxPolicy isEqualToString:@"negotiate"]) {
-      config.rtcpMuxPolicy = RTCRtcpMuxPolicyNegotiate;
-    } else if ([rtcpMuxPolicy isEqualToString:@"require"]) {
-      config.rtcpMuxPolicy = RTCRtcpMuxPolicyRequire;
+    
+    if (json[@"rtcpMuxPolicy"] != nil && [json[@"rtcpMuxPolicy"] isKindOfClass:[NSString class]]) {
+        NSString *rtcpMuxPolicy = json[@"rtcpMuxPolicy"];
+        if ([rtcpMuxPolicy isEqualToString:@"negotiate"]) {
+            config.rtcpMuxPolicy = RTCRtcpMuxPolicyNegotiate;
+        } else if ([rtcpMuxPolicy isEqualToString:@"require"]) {
+            config.rtcpMuxPolicy = RTCRtcpMuxPolicyRequire;
+        }
     }
-  }
-
-  if (json[@"sdpSemantics"] != nil && [json[@"sdpSemantics"] isKindOfClass:[NSString class]]) {
-    NSString *sdpSemantics = json[@"sdpSemantics"];
-    if ([sdpSemantics isEqualToString:@"plan-b"]) {
-      config.sdpSemantics = RTCSdpSemanticsPlanB;
-    } else if ([sdpSemantics isEqualToString:@"unified-plan"]) {
-      config.sdpSemantics = RTCSdpSemanticsUnifiedPlan;
+    
+    if (json[@"sdpSemantics"] != nil && [json[@"sdpSemantics"] isKindOfClass:[NSString class]]) {
+        NSString *sdpSemantics = json[@"sdpSemantics"];
+        if ([sdpSemantics isEqualToString:@"plan-b"]) {
+            config.sdpSemantics = RTCSdpSemanticsPlanB;
+        } else if ([sdpSemantics isEqualToString:@"unified-plan"]) {
+            config.sdpSemantics = RTCSdpSemanticsUnifiedPlan;
+        }
     }
-  }
-
-  // === below is private api in webrtc ===
-  if (json[@"tcpCandidatePolicy"] != nil &&
-      [json[@"tcpCandidatePolicy"] isKindOfClass:[NSString class]]) {
-    NSString* tcpCandidatePolicy = json[@"tcpCandidatePolicy"];
-    if ([tcpCandidatePolicy isEqualToString:@"enabled"]) {
-      config.tcpCandidatePolicy = RTCTcpCandidatePolicyEnabled;
-    } else if ([tcpCandidatePolicy isEqualToString:@"disabled"]) {
-      config.tcpCandidatePolicy = RTCTcpCandidatePolicyDisabled;
+    
+    // === below is private api in webrtc ===
+    if (json[@"tcpCandidatePolicy"] != nil &&
+        [json[@"tcpCandidatePolicy"] isKindOfClass:[NSString class]]) {
+        NSString* tcpCandidatePolicy = json[@"tcpCandidatePolicy"];
+        if ([tcpCandidatePolicy isEqualToString:@"enabled"]) {
+            config.tcpCandidatePolicy = RTCTcpCandidatePolicyEnabled;
+        } else if ([tcpCandidatePolicy isEqualToString:@"disabled"]) {
+            config.tcpCandidatePolicy = RTCTcpCandidatePolicyDisabled;
+        }
     }
-  }
-
-  // candidateNetworkPolicy (private api)
-  if (json[@"candidateNetworkPolicy"] != nil &&
-           [json[@"candidateNetworkPolicy"] isKindOfClass:[NSString class]]) {
-    NSString* candidateNetworkPolicy = json[@"candidateNetworkPolicy"];
-    if ([candidateNetworkPolicy isEqualToString:@"all"]) {
-      config.candidateNetworkPolicy = RTCCandidateNetworkPolicyAll;
-    } else if ([candidateNetworkPolicy isEqualToString:@"low_cost"]) {
-      config.candidateNetworkPolicy = RTCCandidateNetworkPolicyLowCost;
+    
+    // candidateNetworkPolicy (private api)
+    if (json[@"candidateNetworkPolicy"] != nil &&
+        [json[@"candidateNetworkPolicy"] isKindOfClass:[NSString class]]) {
+        NSString* candidateNetworkPolicy = json[@"candidateNetworkPolicy"];
+        if ([candidateNetworkPolicy isEqualToString:@"all"]) {
+            config.candidateNetworkPolicy = RTCCandidateNetworkPolicyAll;
+        } else if ([candidateNetworkPolicy isEqualToString:@"low_cost"]) {
+            config.candidateNetworkPolicy = RTCCandidateNetworkPolicyLowCost;
+        }
     }
-  }
-
-  // KeyType (private api)
-  if (json[@"keyType"] != nil && [json[@"keyType"] isKindOfClass:[NSString class]]) {
-    NSString* keyType = json[@"keyType"];
-    if ([keyType isEqualToString:@"RSA"]) {
-      config.keyType = RTCEncryptionKeyTypeRSA;
-    } else if ([keyType isEqualToString:@"ECDSA"]) {
-      config.keyType = RTCEncryptionKeyTypeECDSA;
+    
+    // KeyType (private api)
+    if (json[@"keyType"] != nil && [json[@"keyType"] isKindOfClass:[NSString class]]) {
+        NSString* keyType = json[@"keyType"];
+        if ([keyType isEqualToString:@"RSA"]) {
+            config.keyType = RTCEncryptionKeyTypeRSA;
+        } else if ([keyType isEqualToString:@"ECDSA"]) {
+            config.keyType = RTCEncryptionKeyTypeECDSA;
+        }
     }
-  }
-
-  // continualGatheringPolicy (private api)
-  if (json[@"continualGatheringPolicy"] != nil &&
-           [json[@"continualGatheringPolicy"] isKindOfClass:[NSString class]]) {
-    NSString* continualGatheringPolicy = json[@"continualGatheringPolicy"];
-    if ([continualGatheringPolicy isEqualToString:@"gather_once"]) {
-      config.continualGatheringPolicy = RTCContinualGatheringPolicyGatherOnce;
-    } else if ([continualGatheringPolicy isEqualToString:@"gather_continually"]) {
-      config.continualGatheringPolicy = RTCContinualGatheringPolicyGatherContinually;
+    
+    // continualGatheringPolicy (private api)
+    if (json[@"continualGatheringPolicy"] != nil &&
+        [json[@"continualGatheringPolicy"] isKindOfClass:[NSString class]]) {
+        NSString* continualGatheringPolicy = json[@"continualGatheringPolicy"];
+        if ([continualGatheringPolicy isEqualToString:@"gather_once"]) {
+            config.continualGatheringPolicy = RTCContinualGatheringPolicyGatherOnce;
+        } else if ([continualGatheringPolicy isEqualToString:@"gather_continually"]) {
+            config.continualGatheringPolicy = RTCContinualGatheringPolicyGatherContinually;
+        }
     }
-  }
-
-  // audioJitterBufferMaxPackets (private api)
-  if (json[@"audioJitterBufferMaxPackets"] != nil &&
-           [json[@"audioJitterBufferMaxPackets"] isKindOfClass:[NSNumber class]]) {
-    NSNumber* audioJitterBufferMaxPackets = json[@"audioJitterBufferMaxPackets"];
-    config.audioJitterBufferMaxPackets = [audioJitterBufferMaxPackets intValue];
-  }
-
-  // iceConnectionReceivingTimeout (private api)
-  if (json[@"iceConnectionReceivingTimeout"] != nil &&
-           [json[@"iceConnectionReceivingTimeout"] isKindOfClass:[NSNumber class]]) {
-    NSNumber* iceConnectionReceivingTimeout = json[@"iceConnectionReceivingTimeout"];
-    config.iceConnectionReceivingTimeout = [iceConnectionReceivingTimeout intValue];
-  }
-
-  // iceBackupCandidatePairPingInterval (private api)
-  if (json[@"iceBackupCandidatePairPingInterval"] != nil &&
-           [json[@"iceBackupCandidatePairPingInterval"] isKindOfClass:[NSNumber class]]) {
-    NSNumber* iceBackupCandidatePairPingInterval = json[@"iceConnectionReceivingTimeout"];
-    config.iceBackupCandidatePairPingInterval = [iceBackupCandidatePairPingInterval intValue];
-  }
-
-  // audioJitterBufferFastAccelerate (private api)
-  if (json[@"audioJitterBufferFastAccelerate"] != nil &&
-           [json[@"audioJitterBufferFastAccelerate"] isKindOfClass:[NSNumber class]]) {
-    NSNumber* audioJitterBufferFastAccelerate = json[@"audioJitterBufferFastAccelerate"];
-    config.audioJitterBufferFastAccelerate = [audioJitterBufferFastAccelerate boolValue];
-  }
-
-  // pruneTurnPorts (private api)
-  if (json[@"pruneTurnPorts"] != nil && [json[@"pruneTurnPorts"] isKindOfClass:[NSNumber class]]) {
-    NSNumber* pruneTurnPorts = json[@"pruneTurnPorts"];
-    config.shouldPruneTurnPorts = [pruneTurnPorts boolValue];
-  }
-
-  // presumeWritableWhenFullyRelayed (private api)
-  if (json[@"presumeWritableWhenFullyRelayed"] != nil &&
-           [json[@"presumeWritableWhenFullyRelayed"] isKindOfClass:[NSNumber class]]) {
-    NSNumber* presumeWritableWhenFullyRelayed = json[@"presumeWritableWhenFullyRelayed"];
-    config.shouldPresumeWritableWhenFullyRelayed = [presumeWritableWhenFullyRelayed boolValue];
-  }
-
-  // cryptoOptions (private api)
-  if (json[@"cryptoOptions"] != nil &&
-           [json[@"cryptoOptions"] isKindOfClass:[NSDictionary class]]) {
-    id options = json[@"cryptoOptions"];
-    BOOL srtpEnableGcmCryptoSuites = NO;
-    BOOL sframeRequireFrameEncryption = NO;
-    BOOL srtpEnableEncryptedRtpHeaderExtensions = NO;
-    BOOL srtpEnableAes128Sha1_32CryptoCipher = NO;
-
-    if (options[@"enableGcmCryptoSuites" != nil &&
-                [options[@"enableGcmCryptoSuites"] isKindOfClass:[NSNumber class]]]) {
-      NSNumber* value = options[@"enableGcmCryptoSuites"];
-      srtpEnableGcmCryptoSuites = [value boolValue];
+    
+    // audioJitterBufferMaxPackets (private api)
+    if (json[@"audioJitterBufferMaxPackets"] != nil &&
+        [json[@"audioJitterBufferMaxPackets"] isKindOfClass:[NSNumber class]]) {
+        NSNumber* audioJitterBufferMaxPackets = json[@"audioJitterBufferMaxPackets"];
+        config.audioJitterBufferMaxPackets = [audioJitterBufferMaxPackets intValue];
     }
-
-    if (options[@"requireFrameEncryption"] != nil &&
-                [options[@"requireFrameEncryption"] isKindOfClass:[NSNumber class]]) {
-      NSNumber* value = options[@"requireFrameEncryption"];
-      sframeRequireFrameEncryption = [value boolValue];
+    
+    // iceConnectionReceivingTimeout (private api)
+    if (json[@"iceConnectionReceivingTimeout"] != nil &&
+        [json[@"iceConnectionReceivingTimeout"] isKindOfClass:[NSNumber class]]) {
+        NSNumber* iceConnectionReceivingTimeout = json[@"iceConnectionReceivingTimeout"];
+        config.iceConnectionReceivingTimeout = [iceConnectionReceivingTimeout intValue];
     }
-
-    if (options[@"enableEncryptedRtpHeaderExtensions"] != nil &&
-                [options[@"enableEncryptedRtpHeaderExtensions"] isKindOfClass:[NSNumber class]]) {
-      NSNumber* value = options[@"enableEncryptedRtpHeaderExtensions"];
-      srtpEnableEncryptedRtpHeaderExtensions = [value boolValue];
+    
+    // iceBackupCandidatePairPingInterval (private api)
+    if (json[@"iceBackupCandidatePairPingInterval"] != nil &&
+        [json[@"iceBackupCandidatePairPingInterval"] isKindOfClass:[NSNumber class]]) {
+        NSNumber* iceBackupCandidatePairPingInterval = json[@"iceConnectionReceivingTimeout"];
+        config.iceBackupCandidatePairPingInterval = [iceBackupCandidatePairPingInterval intValue];
     }
-
-    if (options[@"enableAes128Sha1_32CryptoCipher"] != nil &&
-                [options[@"enableAes128Sha1_32CryptoCipher"] isKindOfClass:[NSNumber class]]) {
-      NSNumber* value = options[@"enableAes128Sha1_32CryptoCipher"];
-      srtpEnableAes128Sha1_32CryptoCipher = [value boolValue];
+    
+    // audioJitterBufferFastAccelerate (private api)
+    if (json[@"audioJitterBufferFastAccelerate"] != nil &&
+        [json[@"audioJitterBufferFastAccelerate"] isKindOfClass:[NSNumber class]]) {
+        NSNumber* audioJitterBufferFastAccelerate = json[@"audioJitterBufferFastAccelerate"];
+        config.audioJitterBufferFastAccelerate = [audioJitterBufferFastAccelerate boolValue];
     }
-
-    config.cryptoOptions = [[RTCCryptoOptions alloc]
-             initWithSrtpEnableGcmCryptoSuites:srtpEnableGcmCryptoSuites
-           srtpEnableAes128Sha1_32CryptoCipher:srtpEnableAes128Sha1_32CryptoCipher
-        srtpEnableEncryptedRtpHeaderExtensions:srtpEnableEncryptedRtpHeaderExtensions
-                  sframeRequireFrameEncryption:(BOOL)sframeRequireFrameEncryption];
-  }
-
-  return config;
+    
+    // pruneTurnPorts (private api)
+    if (json[@"pruneTurnPorts"] != nil && [json[@"pruneTurnPorts"] isKindOfClass:[NSNumber class]]) {
+        NSNumber* pruneTurnPorts = json[@"pruneTurnPorts"];
+        config.shouldPruneTurnPorts = [pruneTurnPorts boolValue];
+    }
+    
+    // presumeWritableWhenFullyRelayed (private api)
+    if (json[@"presumeWritableWhenFullyRelayed"] != nil &&
+        [json[@"presumeWritableWhenFullyRelayed"] isKindOfClass:[NSNumber class]]) {
+        NSNumber* presumeWritableWhenFullyRelayed = json[@"presumeWritableWhenFullyRelayed"];
+        config.shouldPresumeWritableWhenFullyRelayed = [presumeWritableWhenFullyRelayed boolValue];
+    }
+    
+    // cryptoOptions (private api)
+    if (json[@"cryptoOptions"] != nil &&
+        [json[@"cryptoOptions"] isKindOfClass:[NSDictionary class]]) {
+        id options = json[@"cryptoOptions"];
+        BOOL srtpEnableGcmCryptoSuites = NO;
+        BOOL sframeRequireFrameEncryption = NO;
+        BOOL srtpEnableEncryptedRtpHeaderExtensions = NO;
+        BOOL srtpEnableAes128Sha1_32CryptoCipher = NO;
+        
+        if (options[@"enableGcmCryptoSuites" != nil &&
+                    [options[@"enableGcmCryptoSuites"] isKindOfClass:[NSNumber class]]]) {
+            NSNumber* value = options[@"enableGcmCryptoSuites"];
+            srtpEnableGcmCryptoSuites = [value boolValue];
+        }
+        
+        if (options[@"requireFrameEncryption"] != nil &&
+            [options[@"requireFrameEncryption"] isKindOfClass:[NSNumber class]]) {
+            NSNumber* value = options[@"requireFrameEncryption"];
+            sframeRequireFrameEncryption = [value boolValue];
+        }
+        
+        if (options[@"enableEncryptedRtpHeaderExtensions"] != nil &&
+            [options[@"enableEncryptedRtpHeaderExtensions"] isKindOfClass:[NSNumber class]]) {
+            NSNumber* value = options[@"enableEncryptedRtpHeaderExtensions"];
+            srtpEnableEncryptedRtpHeaderExtensions = [value boolValue];
+        }
+        
+        if (options[@"enableAes128Sha1_32CryptoCipher"] != nil &&
+            [options[@"enableAes128Sha1_32CryptoCipher"] isKindOfClass:[NSNumber class]]) {
+            NSNumber* value = options[@"enableAes128Sha1_32CryptoCipher"];
+            srtpEnableAes128Sha1_32CryptoCipher = [value boolValue];
+        }
+        
+        config.cryptoOptions = [[RTCCryptoOptions alloc]
+                                initWithSrtpEnableGcmCryptoSuites:srtpEnableGcmCryptoSuites
+                                srtpEnableAes128Sha1_32CryptoCipher:srtpEnableAes128Sha1_32CryptoCipher
+                                srtpEnableEncryptedRtpHeaderExtensions:srtpEnableEncryptedRtpHeaderExtensions
+                                sframeRequireFrameEncryption:(BOOL)sframeRequireFrameEncryption];
+    }
+    
+    return config;
 }
 
 - (RTCDataChannelConfiguration *)RTCDataChannelConfiguration:(id)json
@@ -1612,7 +1614,7 @@
     }
     if ([json isKindOfClass:[NSDictionary class]]) {
         RTCDataChannelConfiguration *init = [RTCDataChannelConfiguration new];
-
+        
         if (json[@"id"]) {
             [init setChannelId:(int)[json[@"id"] integerValue]];
         }
@@ -1641,11 +1643,11 @@
 }
 
 - (NSDictionary*)dtmfSenderToMap:(id<RTCDtmfSender>)dtmf Id:(NSString*)Id {
-     return @{
-         @"dtmfSenderId": Id,
-         @"interToneGap": @(dtmf.interToneGap / 1000.0),
-         @"duration": @(dtmf.duration / 1000.0),
-     };
+    return @{
+        @"dtmfSenderId": Id,
+        @"interToneGap": @(dtmf.interToneGap / 1000.0),
+        @"duration": @(dtmf.duration / 1000.0),
+    };
 }
 
 - (NSDictionary*)rtpParametersToMap:(RTCRtpParameters*)parameters {
@@ -1675,7 +1677,7 @@
             @"ssrc": encoding.ssrc ? encoding.ssrc : [NSNumber numberWithLong:0]
         }];
     }
-
+    
     NSMutableArray *codecs = [NSMutableArray array];
     for (RTCRtpCodecParameters* codec in parameters.codecs) {
         [codecs addObject:@{
@@ -1687,14 +1689,14 @@
             @"kind": codec.kind
         }];
     }
-
-     return @{
-         @"transactionId": parameters.transactionId,
-         @"rtcp": rtcp,
-         @"headerExtensions": headerExtensions,
-         @"encodings": encodings,
-         @"codecs": codecs
-     };
+    
+    return @{
+        @"transactionId": parameters.transactionId,
+        @"rtcp": rtcp,
+        @"headerExtensions": headerExtensions,
+        @"encodings": encodings,
+        @"codecs": codecs
+    };
 }
 
 -(NSString*)streamTrackStateToString:(RTCMediaStreamTrackState)state {
@@ -1716,11 +1718,11 @@
     for (RTCMediaStreamTrack* track in stream.audioTracks) {
         [audioTracks addObject:[self mediaTrackToMap:track]];
     }
-
+    
     for (RTCMediaStreamTrack* track in stream.videoTracks) {
         [videoTracks addObject:[self mediaTrackToMap:track]];
     }
-
+    
     return @{
         @"streamId": stream.streamId,
         @"ownerTag": ownerTag,
@@ -1740,7 +1742,7 @@
         @"label": track.trackId,
         @"readyState": [self streamTrackStateToString:track.readyState],
         @"remote": @(YES)
-        };
+    };
     return params;
 }
 
@@ -1774,8 +1776,8 @@
 }
 
 -(RTCRtpSender*) getRtpSenderById:(RTCPeerConnection *)peerConnection Id:(NSString*)Id {
-   for( RTCRtpSender* sender in peerConnection.senders) {
-       if([sender.senderId isEqualToString:Id]){
+    for( RTCRtpSender* sender in peerConnection.senders) {
+        if([sender.senderId isEqualToString:Id]){
             return sender;
         }
     }
@@ -1834,15 +1836,15 @@
     NSString* direction = map[@"direction"];
     
     RTCRtpTransceiverInit* init = [RTCRtpTransceiverInit alloc];
-
+    
     if(direction != nil) {
         init.direction = [self stringToTransceiverDirection:direction];
     }
-
+    
     if(streamIds != nil) {
         init.streamIds = streamIds;
     }
-
+    
     if(encodingsParams != nil) {
         NSMutableArray<RTCRtpEncodingParameters *> *sendEncodings = [[NSMutableArray alloc] init];
         for (NSDictionary* map in encodingsParams){
@@ -1866,13 +1868,13 @@
 
 -(RTCRtpTransceiverDirection)stringToTransceiverDirection:(NSString*)type {
     if([type isEqualToString:@"sendrecv"]) {
-            return RTCRtpTransceiverDirectionSendRecv;
+        return RTCRtpTransceiverDirectionSendRecv;
     } else if([type isEqualToString:@"sendonly"]){
-            return RTCRtpTransceiverDirectionSendOnly;
+        return RTCRtpTransceiverDirectionSendOnly;
     } else if([type isEqualToString: @"recvonly"]){
-            return RTCRtpTransceiverDirectionRecvOnly;
+        return RTCRtpTransceiverDirectionRecvOnly;
     } else if([type isEqualToString: @"inactive"]){
-            return RTCRtpTransceiverDirectionInactive;
+        return RTCRtpTransceiverDirectionInactive;
     }
     return RTCRtpTransceiverDirectionInactive;
 }
@@ -1883,32 +1885,32 @@
     NSArray<RTCRtpEncodingParameters *> *currentEncodings = parameters.encodings;
     // new encodings
     NSArray* newEncodings = [newParameters objectForKey:@"encodings"];
-
+    
     for (int i = 0; i < [newEncodings count]; i++) {
         RTCRtpEncodingParameters *currentParams = nil;
         NSDictionary *newParams = [newEncodings objectAtIndex:i];
         NSString *rid = [newParams objectForKey:@"rid"];
-
+        
         // update by matching RID
         if ([rid isKindOfClass:[NSString class]] && [rid length] != 0) {
             // try to find current encoding with same rid
             NSUInteger result = [currentEncodings indexOfObjectPassingTest:^BOOL(RTCRtpEncodingParameters * _Nonnull obj,
-                                                                           NSUInteger idx,
-                                                                           BOOL * _Nonnull stop) {
+                                                                                 NSUInteger idx,
+                                                                                 BOOL * _Nonnull stop) {
                 // stop if found object with matching rid
                 return (*stop = ([rid isEqualToString:obj.rid]));
             }];
-
+            
             if (result != NSNotFound) {
                 currentParams = [currentEncodings objectAtIndex:result];
             }
         }
-
+        
         // fall back to update by index
         if (currentParams == nil && i < [currentEncodings count]) {
             currentParams = [currentEncodings objectAtIndex:i];
         }
-
+        
         if (currentParams != nil) {
             // update values
             NSNumber *active = [newParams objectForKey:@"active"];
@@ -1925,12 +1927,12 @@
             if (scaleResolutionDownBy != nil) currentParams.scaleResolutionDownBy = scaleResolutionDownBy;
         }
     }
-
+    
     return parameters;
-  }
+}
 
 -(NSString*)transceiverDirectionString:(RTCRtpTransceiverDirection)direction {
-       switch (direction) {
+    switch (direction) {
         case RTCRtpTransceiverDirectionSendRecv:
             return @"sendrecv";
         case RTCRtpTransceiverDirectionSendOnly:

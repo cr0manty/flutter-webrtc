@@ -92,7 +92,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         [mediaStream addAudioTrack:audioTrack];
     }
 
-    [AudioUtils ensureAudioSessionWithExternalMic:NO withRecording: YES];
+    [AudioUtils ensureAudioSessionWithRecording: YES];
 
     successCallback(mediaStream);
 }
