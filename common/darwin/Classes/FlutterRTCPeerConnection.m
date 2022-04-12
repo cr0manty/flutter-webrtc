@@ -2,7 +2,7 @@
 #import "FlutterWebRTCPlugin.h"
 #import "FlutterRTCPeerConnection.h"
 #import "FlutterRTCDataChannel.h"
-#import "AudioUtils.h"
+
 
 #import <WebRTC/WebRTC.h>
 
@@ -396,11 +396,9 @@
     NSMutableArray *audioTracks = [NSMutableArray array];
     NSMutableArray *videoTracks = [NSMutableArray array];
 
-    BOOL hasAudio = NO;
     for (RTCAudioTrack *track in stream.audioTracks) {
         peerConnection.remoteTracks[track.trackId] = track;
         [audioTracks addObject:@{@"id": track.trackId, @"kind": track.kind, @"label": track.trackId, @"enabled": @(track.isEnabled), @"remote": @(YES), @"readyState": @"live"}];
-        hasAudio = YES;
     }
 
     for (RTCVideoTrack *track in stream.videoTracks) {
@@ -410,10 +408,6 @@
 
     NSString *streamId = stream.streamId;
     peerConnection.remoteStreams[streamId] = stream;
-
-    if (hasAudio) {
-        [AudioUtils ensureAudioSessionWithRecording:NO];
-    }
 
     FlutterEventSink eventSink = peerConnection.eventSink;
     if(eventSink){
@@ -565,9 +559,6 @@ didStartReceivingOnTransceiver:(RTCRtpTransceiver *)transceiver {
             peerConnection.remoteStreams[mediaStreams[0].streamId] = mediaStreams[0];
         }
 
-        if ([rtpReceiver.track.kind isEqualToString:@"audio"]) {
-            [AudioUtils ensureAudioSessionWithRecording:NO];
-        }
         eventSink(event);
     }
 }

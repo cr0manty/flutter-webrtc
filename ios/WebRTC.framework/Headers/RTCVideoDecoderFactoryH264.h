@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-// compiled by Denis
 #import <Foundation/Foundation.h>
 
 #import <WebRTC/RTCMacros.h>

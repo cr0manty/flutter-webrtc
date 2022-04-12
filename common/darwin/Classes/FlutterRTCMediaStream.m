@@ -7,7 +7,6 @@
 #import "FlutterRTCPeerConnection.h"
 #import "FlutterRTCVideoRenderer.h"
 #import "FlutterRTCCameraVideoCapturer.h"
-#import "AudioUtils.h"
 #import "CameraLensAndZoomHelper.h"
 #import "ExposureHelper.h"
 #import "WhiteBalanceHelper.h"
@@ -80,6 +79,13 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
      successCallback:(NavigatorUserMediaSuccessCallback)successCallback
        errorCallback:(NavigatorUserMediaErrorCallback)errorCallback
          mediaStream:(RTCMediaStream *)mediaStream {
+//    NSString *trackId = [[NSUUID UUID] UUIDString];
+//     RTCAudioTrack *audioTrack
+//     = [self.peerConnectionFactory audioTrackWithTrackId:trackId];
+//
+//
+//     [mediaStream addAudioTrack:audioTrack];
+    
     NSString *trackId = [[NSUUID UUID] UUIDString];
     id audioConstraints = constraints[@"audio"];
     if([audioConstraints isKindOfClass:[NSNumber class]] && [audioConstraints boolValue]) {
@@ -91,8 +97,6 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         RTCAudioTrack *audioTrack = [self.peerConnectionFactory audioTrackWithSource:audioSource trackId:trackId];
         [mediaStream addAudioTrack:audioTrack];
     }
-
-    [AudioUtils ensureAudioSessionWithRecording: YES];
 
     successCallback(mediaStream);
 }

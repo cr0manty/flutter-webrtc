@@ -9,7 +9,6 @@
 #import "ExposureHelper.h"
 #import "FocusHelper.h"
 #import "FlutterDataHandler.h"
-#import "AudioUtils.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <WebRTC/WebRTC.h>
@@ -87,11 +86,13 @@
     self.renders = [[NSMutableDictionary alloc] init];
 #if TARGET_OS_IPHONE
     AVAudioSession *session = [AVAudioSession sharedInstance];
+    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
 #endif
     return self;
 }
+
 
 -(void)ensureInitialized:(BOOL)bypassVoiceProcessing {
     //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
@@ -107,6 +108,10 @@
                                   initWithBypassVoiceProcessing:bypassVoiceProcessing
                                   encoderFactory:simulcastFactory
                                   decoderFactory:decoderFactory];
+        
+//        _peerConnectionFactory = [[RTCPeerConnectionFactory alloc]
+//                                  initWithEncoderFactory:simulcastFactory
+//                                  decoderFactory:decoderFactory];
     }
 }
 
@@ -116,32 +121,53 @@
     NSDictionary *interuptionDict = notification.userInfo;
     NSInteger routeChangeReason = [[interuptionDict valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
     
-    switch (routeChangeReason) {
-        case AVAudioSessionRouteChangeReasonCategoryChange: {
-            
-            // TODO: rework
-            AVAudioSession *session = [AVAudioSession sharedInstance];
-            if ([session category] != AVAudioSessionCategoryMultiRoute) {
+    AVAudioSessionRouteDescription *routeDescription = [notification.userInfo valueForKey:AVAudioSessionRouteChangePreviousRouteKey];
+    
+
+     NSLog(@"[AVAudioSession] Route change:");
+     switch (routeChangeReason) {
+         case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+             NSLog(@"[AVAudioSession]      NewDeviceAvailable");
+             break;
+         case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
+             NSLog(@"[AVAudioSession]      OldDeviceUnavailable");
+             break;
+         case AVAudioSessionRouteChangeReasonCategoryChange: {
+             AVAudioSession *session = [AVAudioSession sharedInstance];
+             if ([session category] != AVAudioSessionCategoryMultiRoute) {
                 NSError* setCategoryError;
                 [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
                            error:&setCategoryError];
                 if(setCategoryError != nil) {
-                    NSLog(@"setCategoryError: %@", setCategoryError);
+                    NSLog(@"[AVAudioSession] setCategoryError: %@", setCategoryError);
                 }
             }
-            
             NSError* error;
             [[AVAudioSession sharedInstance] overrideOutputAudioPort:_speakerOn? AVAudioSessionPortOverrideSpeaker : AVAudioSessionPortOverrideNone error:&error];
-            break;
-        }
-        case AVAudioSessionRouteChangeReasonNewDeviceAvailable: {
-            [AudioUtils setPreferHeadphoneInput];
-            break;
-        }
-            
-        default:
-            break;
-    }
+             if(error != nil) {
+                 NSLog(@"[AVAudioSession] setCategoryError: %@", error);
+             }
+             NSLog(@"[AVAudioSession]      CategoryChange");
+             NSLog(@"[AVAudioSession]  New Category: %@", [[AVAudioSession sharedInstance] category]);
+             break;
+             }
+         case AVAudioSessionRouteChangeReasonOverride:
+             NSLog(@"[AVAudioSession]      Override");
+             break;
+         case AVAudioSessionRouteChangeReasonWakeFromSleep:
+             NSLog(@"[AVAudioSession]      WakeFromSleep");
+             break;
+         case AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory:
+             NSLog(@"[AVAudioSession]      NoSuitableRouteForCategory");
+             break;
+         default:
+             NSLog(@"[AVAudioSession]      ReasonUnknown");
+         }
+
+     NSLog(@"[AVAudioSession] Previous route:\n");
+     NSLog(@"[AVAudioSession] %@\n", routeDescription);
+     NSLog(@"[AVAudioSession] Current route:\n");
+     NSLog(@"[AVAudioSession] %@\n", [AVAudioSession sharedInstance].currentRoute);
 #endif
 }
 
