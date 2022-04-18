@@ -1,11 +1,7 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../flutter_webrtc.dart';
-import 'interface/media_stream.dart';
-import 'interface/mediadevices.dart';
 
 class Helper {
   static Future<List<MediaDeviceInfo>> enumerateDevices(String type) async {
@@ -42,33 +38,6 @@ class Helper {
   ///
   static Future<MediaStream> openCamera(Map<String, dynamic> mediaConstraints) {
     return navigator.mediaDevices.getUserMedia(mediaConstraints);
-  }
-
-  // trigger focus
-  static Future<bool> changeFocus() {
-    if (!kIsWeb && !Platform.isAndroid) {
-      return WebRTC.invokeMethod(
-        'mediaStreamChangeFocus',
-        <String, dynamic>{},
-      ).then((value) => value ?? false);
-    }
-
-    return Future.value(false);
-  }
-
-  // set camera zoom
-  static Future<bool> changeZoom(MediaStreamTrack track, double zoom) {
-    if (!kIsWeb) {
-      return WebRTC.invokeMethod(
-        'mediaStreamChangeZoom',
-        <String, dynamic>{
-          'zoom': zoom,
-          'trackId': track.id,
-        },
-      ).then((value) => value ?? false);
-    }
-
-    return Future.value(false);
   }
 
   /// For web implementation, make sure to pass the target deviceId

@@ -4,13 +4,14 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'package:webrtc_interface/webrtc_interface.dart';
+
 import '../helper.dart';
-import '../interface/media_stream.dart';
-import '../interface/rtc_video_renderer.dart';
 import 'utils.dart';
 
-class RTCVideoRendererNative extends VideoRenderer {
-  RTCVideoRendererNative();
+class RTCVideoRenderer extends ValueNotifier<RTCVideoValue>
+    implements VideoRenderer {
+  RTCVideoRenderer() : super(RTCVideoValue.empty);
   int? _textureId;
   MediaStream? _srcObject;
   StreamSubscription<dynamic>? _eventSubscription;
@@ -44,6 +45,9 @@ class RTCVideoRendererNative extends VideoRenderer {
   MediaStream? get srcObject => _srcObject;
 
   @override
+  Function? onResize;
+
+  @override
   set srcObject(MediaStream? stream) {
     if (textureId == null) throw 'Call initialize before setting the stream';
 
@@ -58,18 +62,6 @@ class RTCVideoRendererNative extends VideoRenderer {
           : value.copyWith(
               renderVideo: renderVideo,
             );
-    });
-  }
-
-  @override
-  Future<void> setLandscapeMode(bool isLandscapeSupported) async {
-    if (kIsWeb || Platform.isAndroid) return;
-
-    if (textureId == null) throw 'Call initialize before setting the stream';
-
-    await WebRTC.invokeMethod('setLandscapeMode', <String, dynamic>{
-      'textureId': textureId,
-      'landscapeMode': isLandscapeSupported
     });
   }
 
@@ -100,6 +92,7 @@ class RTCVideoRendererNative extends VideoRenderer {
         onResize?.call();
         break;
       case 'didFirstFrameRendered':
+        value = value.copyWith(renderVideo: renderVideo);
         break;
     }
   }

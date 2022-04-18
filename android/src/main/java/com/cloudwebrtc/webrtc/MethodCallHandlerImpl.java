@@ -8,6 +8,7 @@ import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.util.Log;
 import android.util.LongSparseArray;
+import android.media.MediaRecorder;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +20,7 @@ import com.cloudwebrtc.webrtc.utils.ConstraintsArray;
 import com.cloudwebrtc.webrtc.utils.ConstraintsMap;
 import com.cloudwebrtc.webrtc.utils.EglUtils;
 import com.cloudwebrtc.webrtc.utils.ObjectType;
+import com.cloudwebrtc.webrtc.SimulcastVideoEncoderFactoryWrapper;
 
 import org.webrtc.AudioTrack;
 import org.webrtc.CryptoOptions;
@@ -131,7 +133,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
     mPeerConnectionObservers.clear();
   }
 
-  private void ensureInitialized() {
+  private void ensureInitialized(boolean bypassVoiceProcessing) {
     if (mFactory != null) {
       return;
     }
@@ -146,17 +148,30 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
 
     getUserMediaImpl = new GetUserMediaImpl(this, context);
 
-    audioDeviceModule = JavaAudioDeviceModule.builder(context)
-            .setUseHardwareAcousticEchoCanceler(true)
-            .setUseHardwareNoiseSuppressor(true)
-            .setSamplesReadyCallback(getUserMediaImpl.inputSamplesInterceptor)
-            .createAudioDeviceModule();
+    if (bypassVoiceProcessing) {
+      audioDeviceModule =
+              JavaAudioDeviceModule.builder(context)
+                      .setUseHardwareAcousticEchoCanceler(false)
+                      .setUseHardwareNoiseSuppressor(false)
+                      .setUseStereoInput(true)
+                      .setUseStereoOutput(true)
+                      .setAudioSource(MediaRecorder.AudioSource.MIC)
+                      .setSamplesReadyCallback(getUserMediaImpl.inputSamplesInterceptor)
+                      .createAudioDeviceModule();
+    } else {
+      audioDeviceModule =
+              JavaAudioDeviceModule.builder(context)
+                      .setUseHardwareAcousticEchoCanceler(true)
+                      .setUseHardwareNoiseSuppressor(true)
+                      .setSamplesReadyCallback(getUserMediaImpl.inputSamplesInterceptor)
+                      .createAudioDeviceModule();
+    }
 
     getUserMediaImpl.audioDeviceModule = (JavaAudioDeviceModule) audioDeviceModule;
 
     mFactory = PeerConnectionFactory.builder()
             .setOptions(new Options())
-            .setVideoEncoderFactory(new DefaultVideoEncoderFactory(eglContext, false, true))
+            .setVideoEncoderFactory(new SimulcastVideoEncoderFactoryWrapper(eglContext, true, false))
             .setVideoDecoderFactory(new DefaultVideoDecoderFactory(eglContext))
             .setAudioDeviceModule(audioDeviceModule)
             .createPeerConnectionFactory();
@@ -164,10 +179,18 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
 
   @Override
   public void onMethodCall(MethodCall call, @NonNull Result notSafeResult) {
-    ensureInitialized();
-
     final AnyThreadResult result = new AnyThreadResult(notSafeResult);
+
     switch (call.method) {
+      case "initialize":
+        Map<String, Object> options = call.argument("options");
+        boolean enableBypassVoiceProcessing = false;
+        if(options.get("bypassVoiceProcessing") != null) {
+          enableBypassVoiceProcessing = (boolean)options.get("bypassVoiceProcessing");
+        }
+        ensureInitialized(enableBypassVoiceProcessing);
+        result.success(null);
+        break;
       case "createPeerConnection": {
         Map<String, Object> constraints = call.argument("constraints");
         Map<String, Object> configuration = call.argument("configuration");
@@ -190,7 +213,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       case "getSources":
         getSources(result);
         break;
-      case "mediaStreamChangeZoom":
+      case "#VideoHelper/changeZoom":
         String cameraTrackID = call.argument("trackId");
         double zoom = call.argument("zoom");
         getUserMediaImpl.changeZoom(cameraTrackID, zoom, result);
@@ -377,6 +400,12 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       case "trackDispose": {
         String cameraTrackId = call.argument("trackId");
         localTracks.remove(cameraTrackId);
+        result.success(null);
+        break;
+      }
+      case "restartIce": {
+        String peerConnectionId = call.argument("peerConnectionId");
+        restartIce(peerConnectionId);
         result.success(null);
         break;
       }
@@ -1151,7 +1180,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
   }
 
   public void mediaStreamTrackSetEnabled(final String id, final boolean enabled) {
-    MediaStreamTrack track = localTracks.get(id);
+    MediaStreamTrack track = getTrackForId(id);
 
     if (track == null) {
       Log.d(TAG, "mediaStreamTrackSetEnabled() track is null");
@@ -1460,6 +1489,15 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       resultError("peerConnectionGetStats", "peerConnection is null", result);
     } else {
       pco.getStats(trackId, result);
+    }
+  }
+
+  public void restartIce(final String id) {
+    PeerConnectionObserver pco = mPeerConnectionObservers.get(id);
+    if (pco == null || pco.getPeerConnection() == null) {
+      Log.d(TAG, "restartIce() peerConnection is null");
+    } else {
+      pco.restartIce();
     }
   }
 
