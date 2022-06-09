@@ -20,3 +20,4 @@ export 'src/video_helper/camera_lens_and_zoom_helper.dart';
 export 'src/video_helper/exposure_helper.dart';
 export 'src/video_helper/focus_helper.dart';
 export 'src/video_helper/white_balance_helper.dart';
+export 'src/capture_device_info.dart';

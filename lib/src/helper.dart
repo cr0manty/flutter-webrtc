@@ -1,9 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../flutter_webrtc.dart';
 
 class Helper {
+  static final _deviceChangedChannel = const EventChannel(
+    'deviceChanged.dataChannel',
+  );
+
+  static Stream<CaptureDeviceInfo>? _deviceChangedStream;
+
+  static Stream<CaptureDeviceInfo> get deviceIdChangedStream {
+    _deviceChangedStream ??=
+        _deviceChangedChannel.receiveBroadcastStream().transform(
+      StreamTransformer.fromHandlers(
+        handleData: (data, sink) {
+          if (!CaptureDeviceInfo.canBeParsed(data)) {
+            return;
+          }
+
+          sink.add(
+            CaptureDeviceInfo.fromMap(data),
+          );
+        },
+      ),
+    );
+    return _deviceChangedStream!;
+  }
+
   static Future<List<MediaDeviceInfo>> enumerateDevices(String type) async {
     var devices = await navigator.mediaDevices.enumerateDevices();
     return devices.where((d) => d.kind == type).toList();
@@ -135,4 +161,30 @@ class Helper {
       'landscapeMode': isLandscapeSupported
     });
   }
+
+  static Future<AVCaptureDeviceType> getCurrentDeviceType() async {
+    final result = await WebRTC.invokeMethod(
+      'getCurrentDeviceType',
+    );
+
+    if (result == null) {
+      throw 'Can not detect AVCaptureDeviceType';
+    }
+
+    final type = AVCaptureDeviceTypeExtension.typeByName(result);
+
+    return type;
+  }
+
+  static Future<bool> setCustomCameraDevice(String deviceId) async {
+    final result = await WebRTC.invokeMethod<bool>('setCustomCameraDevice', {
+      'uniqueID': deviceId,
+    });
+
+    return result ?? false;
+  }
+
+  static Future<String?> get currentDeviceId => WebRTC.invokeMethod<String>(
+        'getCurrentDeviceId',
+      );
 }

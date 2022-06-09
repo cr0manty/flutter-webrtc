@@ -34,6 +34,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) int _targetFps;
 
 
+@property (nonatomic, strong) FlutterSinkDataHandler* deviceChandgedHandler;
+
 #pragma mark - event streams
 @property (nonatomic, strong) FlutterSinkDataHandler* whiteBalanceModeHandler;
 @property (nonatomic, strong) FlutterSinkDataHandler* whiteBalanceGainsHandler;

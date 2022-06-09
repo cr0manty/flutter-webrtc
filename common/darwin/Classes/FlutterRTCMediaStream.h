@@ -32,4 +32,10 @@
                              result:(FlutterResult) result;
 -(void)mediaStreamDispose;
 
+-(AVCaptureDeviceType)getCurrentDeviceType;
+
+-(NSString*)getCurrentDeviceId;
+
+-(AVCaptureDevice *)getCameraWithPosition:(AVCaptureDevicePosition)position;
+
 @end

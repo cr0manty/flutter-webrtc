@@ -60,7 +60,7 @@ class CameraLensAndZoomHelper extends BaseVideoHelper {
   }
 
   /// zoom
-  Future<bool> setZoom(double zoom, String trackId) async {
+  Future<bool> setZoom(double zoom, String? trackId) async {
     supportedPlatforms(allowAndroid: true);
 
     final result = await channel.invokeMethod<bool>(

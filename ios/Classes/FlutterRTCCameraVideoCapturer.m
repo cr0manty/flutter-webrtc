@@ -72,7 +72,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     }
 }
 
--(RTCVideoRotation) getDefaultLandscapeRotation:(UIDeviceOrientation) currentRotation {
+-(RTCVideoRotation) getDefaultLandscapeRotation:(UIDeviceOrientation)currentRotation {
     switch (currentRotation) {
         case UIDeviceOrientationPortrait:
             return [self swapRotation] ? RTCVideoRotation_270 : RTCVideoRotation_90;

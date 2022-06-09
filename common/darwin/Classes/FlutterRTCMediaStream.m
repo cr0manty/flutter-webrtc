@@ -7,10 +7,6 @@
 #import "FlutterRTCPeerConnection.h"
 #import "FlutterRTCVideoRenderer.h"
 #import "FlutterRTCCameraVideoCapturer.h"
-#import "CameraLensAndZoomHelper.h"
-#import "ExposureHelper.h"
-#import "WhiteBalanceHelper.h"
-#import "FocusHelper.h"
 #import "FlutterDataHandler.h"
 
 #if TARGET_OS_IPHONE
@@ -34,7 +30,6 @@
 @implementation  FlutterWebRTCPlugin (RTCMediaStream)
 
 AVCaptureDevice *_videoDevice;
-NSDictionary* _helperObservers;
 
 /**
  * {@link https://www.w3.org/TR/mediacapture-streams/#navigatorusermediaerrorcallback}
@@ -243,6 +238,22 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     return 0;
 }
 
+-(AVCaptureDevice *)getCameraWithPosition:(AVCaptureDevicePosition)position {
+    if (position == AVCaptureDevicePositionUnspecified) {
+        return [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    }
+    
+    NSArray<AVCaptureDevice*> *devices = [AVCaptureDevice devices];
+    
+    for(AVCaptureDevice *device in devices) {
+        if (device.position == position) {
+            return device;
+        }
+    }
+    return devices[0];
+}
+
+
 /**
  * Initializes a new {@link RTCVideoTrack} which satisfies specific constraints,
  * adds it to a specific {@link RTCMediaStream}, and reports success to a
@@ -264,13 +275,6 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
      successCallback:(NavigatorUserMediaSuccessCallback)successCallback
        errorCallback:(NavigatorUserMediaErrorCallback)errorCallback
          mediaStream:(RTCMediaStream *)mediaStream {
-    id helperObservers = constraints[@"helpers"];
-    if (helperObservers && [helperObservers isKindOfClass:[NSDictionary class]]) {
-        _helperObservers = helperObservers;
-    } else {
-        _helperObservers = [NSDictionary alloc];
-    }
-
     id videoConstraints = constraints[@"video"];
 
     if ([videoConstraints isKindOfClass:[NSDictionary class]]) {
@@ -310,13 +314,13 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
                     self._usingFrontCamera = NO;
                     position = AVCaptureDevicePositionUnspecified;
                 }
-                AVCaptureDevice *device = [CameraLensAndZoomHelper getCameraWithPosition: position];
+                AVCaptureDevice *device = [self getCameraWithPosition: position];
                 [self setVideoDevice:device];
                 [self.videoCapturer setCameraPosition: position];
             }
         }
         if (!_videoDevice) {
-            AVCaptureDevice *device = [CameraLensAndZoomHelper getCameraWithPosition: AVCaptureDevicePositionUnspecified];
+            AVCaptureDevice *device = [self getCameraWithPosition: AVCaptureDevicePositionUnspecified];
             [self setVideoDevice: device];
         }
     }
@@ -328,7 +332,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     self._targetFps = 30;
     
     if (!_videoDevice && [constraints[@"video"] boolValue] == YES) {
-        AVCaptureDevice *device = [CameraLensAndZoomHelper getCameraWithPosition: AVCaptureDevicePositionUnspecified];
+        AVCaptureDevice *device = [self getCameraWithPosition: AVCaptureDevicePositionUnspecified];
         [self setVideoDevice: device];
     }
     
@@ -417,7 +421,6 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
             [self.localTracks removeObjectForKey:track.trackId];
         }
         [self.localStreams removeObjectForKey:stream.streamId];
-        [self removeObservers];
     }
 }
 
@@ -591,12 +594,15 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     self._usingFrontCamera = !self._usingFrontCamera;
     AVCaptureDevicePosition position = self._usingFrontCamera ? AVCaptureDevicePositionFront : AVCaptureDevicePositionBack;
     AVCaptureDevice *videoDevice = [self findDeviceForPosition:position];
+    
+    
     AVCaptureDeviceFormat *selectedFormat = [self selectFormatForDevice:videoDevice];
     [self.videoCapturer startCaptureWithDevice:videoDevice format:selectedFormat fps:[self selectFpsForFormat:selectedFormat] completionHandler:^(NSError* error){
         if (error != nil) {
             result([FlutterError errorWithCode:@"Error while switching camera" message:@"Error while switching camera" details:error]);
         } else {
             [self.videoCapturer setCameraPosition: position];
+            [self setVideoDevice:videoDevice];
             result([NSNumber numberWithBool:self._usingFrontCamera]);
         }
     }];
@@ -667,6 +673,10 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     result(nil);
 }
 
+-(NSString*)getCurrentDeviceId {
+    return _videoDevice.uniqueID;
+}
+
 -(void)mediaStreamTrackChangeCamera:(AVCaptureDevice*)device
                              result:(FlutterResult)result {
     if (!self.videoCapturer) {
@@ -695,7 +705,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     }
     self._usingFrontCamera = !self._usingFrontCamera;
     AVCaptureDevicePosition position = self._usingFrontCamera ? AVCaptureDevicePositionFront : AVCaptureDevicePositionBack;
-    [self setVideoDevice: [CameraLensAndZoomHelper getCameraWithPosition:position]];
+    [self setVideoDevice: [self getCameraWithPosition:position]];
     AVCaptureDeviceFormat *selectedFormat = [self selectFormatForDevice:_videoDevice];
     [self.videoCapturer startCaptureWithDevice:_videoDevice format:selectedFormat fps:[self selectFpsForFormat:selectedFormat] completionHandler:^(NSError* error){
         if (error != nil) {
@@ -765,99 +775,24 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     return fmin(maxSupportedFramerate, self._targetFps);
 }
 
--(void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
-    id oldValue = [change valueForKey:NSKeyValueChangeOldKey];
-    id newValue = [change valueForKey:NSKeyValueChangeNewKey];
-
-    if ([keyPath isEqual:@"whiteBalanceMode"]) {
-        if (oldValue != newValue && self.whiteBalanceModeHandler != nil && self.whiteBalanceModeHandler.sink != nil) {
-            self.whiteBalanceModeHandler.sink(newValue);
-        }
-    } else if ([keyPath isEqual:@"deviceWhiteBalanceGains"]) {
-        if (oldValue != newValue) {
-            NSValue *value = newValue;
-            AVCaptureWhiteBalanceGains gains;
-            [value getValue:&gains];
-
-            if (self.whiteBalanceGainsHandler != nil && self.whiteBalanceGainsHandler.sink != nil) {
-                self.whiteBalanceGainsHandler.sink(@{@"redGain": [NSNumber numberWithFloat: gains.redGain], @"blueGain": [NSNumber numberWithFloat: gains.blueGain], @"greenGain": [NSNumber numberWithFloat: gains.greenGain]});
-            }
-        }
-    } else if ([keyPath isEqual:@"focusMode"]) {
-        if (oldValue != newValue && self.focusModeHandler != nil && self.focusModeHandler.sink != nil) {
-            self.focusModeHandler.sink(newValue);
-        }
-    } else if ([keyPath isEqual:@"lensPosition"]) {
-        if (oldValue != newValue && self.focusLensPositionHandler != nil && self.focusLensPositionHandler.sink != nil) {
-            self.focusLensPositionHandler.sink(newValue);
-        }
-    } else if ([keyPath isEqual:@"exposureMode"]) {
-        if (oldValue != newValue && self.exposureModeHandler != nil && self.exposureModeHandler.sink != nil) {
-            self.exposureModeHandler.sink(newValue);
-        }
-    } else if ([keyPath isEqual:@"exposureDuration"]) {
-        if (oldValue != newValue && self.exposureDurationHandler != nil && self.exposureDurationHandler.sink != nil) {
-            NSValue *value = newValue;
-            CMTime time;
-            [value getValue:&time];
-            NSDictionary *data = [ExposureHelper getExposureDurationSeconds: _videoDevice duration:time];
-            self.exposureDurationHandler.sink(data);
-        }
-    } else if ([keyPath isEqual:@"ISO"]) {
-        if (oldValue != newValue && self.ISOHandler != nil && self.ISOHandler.sink != nil) {
-            self.ISOHandler.sink(newValue);
-        }
-    } else if ([keyPath isEqual:@"exposureTargetBias"]) {
-        if (oldValue != newValue && self.exposureTargetBiasHandler != nil && self.exposureTargetBiasHandler.sink != nil) {
-            self.exposureTargetBiasHandler.sink(newValue);
-        }
-    } else if ([keyPath isEqual:@"exposureTargetOffset"]) {
-        if (oldValue != newValue && self.exposureTargetOffsetHandler != nil && self.exposureTargetOffsetHandler.sink != nil) {
-            self.exposureTargetOffsetHandler.sink(newValue);
-        }
-    } else {
-        NSLog(@"changedDevice");
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-    }
-}
 
 -(void)setVideoDevice:(AVCaptureDevice*)device {
-    [self removeObservers];
     _videoDevice = device;
-    [self addObservers:device];
-}
-
--(void)removeObservers {
-    @try {
-        if ([_helperObservers[@"white_balance"] boolValue]) {
-            [WhiteBalanceHelper removeObservers:_videoDevice instance:self];
-        }
-        if ([_helperObservers[@"focus"] boolValue]) {
-            [FocusHelper removeObservers:_videoDevice instance:self];
-        }
-        if ([_helperObservers[@"exposure"] boolValue]) {
-            [ExposureHelper removeObservers:_videoDevice instance:self];
-        }
-    } @catch (NSException *exception) {
-        NSLog(@"removeObservers error: %@", exception);
+    if (self.deviceChandgedHandler != nil && self.self.deviceChandgedHandler.sink != nil) {
+        self.deviceChandgedHandler.sink(@{
+            @"deviceId": device.uniqueID,
+            @"deviceType": device.deviceType,
+        });
     }
 }
 
--(void)addObservers:(AVCaptureDevice*)device {
-    if (_helperObservers[@"white_balance"]) {
-        [WhiteBalanceHelper addObservers:device instance:self];
-    }
-    if (_helperObservers[@"focus"]) {
-        [FocusHelper addObservers:device instance:self];
-    }
-    if (_helperObservers[@"exposure"]) {
-        [ExposureHelper addObservers:device instance:self];
-    }
-}
 
 -(void)mediaStreamDispose {
     _videoDevice = nil;
-    [self removeObservers];
+}
+
+-(AVCaptureDeviceType)getCurrentDeviceType {
+    return _videoDevice.deviceType;
 }
 
 

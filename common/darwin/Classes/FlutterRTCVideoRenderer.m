@@ -24,7 +24,7 @@
 @synthesize eventSink = _eventSink;
 
 - (instancetype)initWithTextureRegistry:(id<FlutterTextureRegistry>)registry
-                   messenger:(NSObject<FlutterBinaryMessenger>*)messenger{
+                   messenger:(NSObject<FlutterBinaryMessenger>*)messenger {
     self = [super init];
     if (self){
         _isFirstFrameRendered = false;
@@ -59,7 +59,7 @@
     return nil;
 }
 
--(void)dispose{
+-(void)dispose {
     [_registry unregisterTexture:_textureId];
 }
 
@@ -82,9 +82,8 @@
 }
 
 
--(id<RTCI420Buffer>) correctRotation:(const id<RTCI420Buffer>) src
-                                withRotation:(RTCVideoRotation) rotation
-{
+-(id<RTCI420Buffer>) correctRotation:(const id<RTCI420Buffer>)src
+                        withRotation:(RTCVideoRotation)rotation {
     int rotated_width = src.width;
     int rotated_height = src.height;
 
@@ -109,9 +108,7 @@
     return buffer;
 }
 
--(void)copyI420ToCVPixelBuffer:(CVPixelBufferRef)outputPixelBuffer withFrame:(RTCVideoFrame *) frame
-{
-
+-(void)copyI420ToCVPixelBuffer:(CVPixelBufferRef)outputPixelBuffer withFrame:(RTCVideoFrame *)frame {
     id<RTCI420Buffer> i420Buffer = [self correctRotation:[frame.buffer toI420] withRotation:frame.rotation];
     CVPixelBufferLockBaseAddress(outputPixelBuffer, 0);
 
@@ -172,7 +169,6 @@
 
 #pragma mark - RTCVideoRenderer methods
 - (void)renderFrame:(RTCVideoFrame *)frame {
-
     [self copyI420ToCVPixelBuffer:_pixelBufferRef withFrame:frame];
 
     __weak FlutterRTCVideoRenderer *weakSelf = self;
@@ -225,8 +221,6 @@
  * @param size The size of the video frame to render.
  */
 - (void)setSize:(CGSize)size {
-
-
     if(_pixelBufferRef == nil || (size.width != _frameSize.width || size.height != _frameSize.height)) {
         if(_pixelBufferRef) {
             CVBufferRelease(_pixelBufferRef);
@@ -258,7 +252,7 @@
 @implementation FlutterWebRTCPlugin (FlutterVideoRendererManager)
 
 - (FlutterRTCVideoRenderer *)createWithTextureRegistry:(id<FlutterTextureRegistry>)registry
-                       messenger:(NSObject<FlutterBinaryMessenger>*)messenger{
+                       messenger:(NSObject<FlutterBinaryMessenger>*)messenger {
     return [[FlutterRTCVideoRenderer alloc] initWithTextureRegistry:registry messenger:messenger];
 }
 
