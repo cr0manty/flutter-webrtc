@@ -124,10 +124,4 @@ class RTCDataChannelNative extends RTCDataChannel {
       'dataChannelId': _flutterId
     });
   }
-
-  @override
-  int? get bufferedAmount => null;
-
-  @override
-  int? get id => _dataChannelId;
 }
