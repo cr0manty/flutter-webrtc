@@ -15,6 +15,13 @@ Enterprise Grade APIs for Feeds & Chat. <a href="https://getstream.io/chat/flutt
 </p>
 
 </br>
+<p align="center">
+<a href="https://livekit.io/?utm_source=opencollective&utm_medium=github&utm_campaign=flutter-webrtc" target="_blank">
+<img src="https://avatars.githubusercontent.com/u/69438833?s=92&v=4" alt="LiveKit" style="margin: 8px" />
+</a>
+<br />
+   <a href="https://livekit.io/?utm_source=opencollective&utm_medium=github&utm_campaign=flutter-webrtc" target="_blank">LiveKit</a> - Open source WebRTC infrastructure
+<p>
 
 ## Functionality
 
@@ -61,8 +68,9 @@ Ensure the following permission is present in your Android Manifest file, locate
 If you need to use a Bluetooth device, please add:
 
 ```xml
-<uses-permission android:name="android.permission.BLUETOOTH" />
-<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 ```
 
 The Flutter project template adds it, so it may already be there.
@@ -95,6 +103,7 @@ The project is inseparable from the contributors of the community.
 - [ION](https://github.com/pion/ion) - Sponsor
 - [reSipWebRTC](https://github.com/reSipWebRTC) - Sponsor
 - [沃德米科技](https://github.com/woodemi)-[36记手写板](https://www.36notes.com) - Sponsor
+- [阿斯特网络科技有限公司](https://www.astgo.net/) - Sponsor
 
 ### Example
 

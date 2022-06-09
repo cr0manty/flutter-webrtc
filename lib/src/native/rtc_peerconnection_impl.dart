@@ -166,8 +166,9 @@ class RTCPeerConnectionNative extends RTCPeerConnection {
       case 'didOpenDataChannel':
         int dataChannelId = map['id'];
         String label = map['label'];
-        _dataChannel =
-            RTCDataChannelNative(_peerConnectionId, label, dataChannelId);
+        String flutterId = map['flutterId'];
+        _dataChannel = RTCDataChannelNative(
+            _peerConnectionId, label, dataChannelId, flutterId);
         onDataChannel?.call(_dataChannel!);
         break;
       case 'onRenegotiationNeeded':
@@ -418,8 +419,8 @@ class RTCPeerConnectionNative extends RTCPeerConnection {
         'dataChannelDict': dataChannelDict.toMap()
       });
 
-      _dataChannel =
-          RTCDataChannelNative(_peerConnectionId, label, response['id']);
+      _dataChannel = RTCDataChannelNative(
+          _peerConnectionId, label, response['id'], response['flutterId']);
       return _dataChannel!;
     } on PlatformException catch (e) {
       throw 'Unable to RTCPeerConnection::createDataChannel: ${e.message}';

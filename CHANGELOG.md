@@ -1,6 +1,41 @@
 # Changelog
 
 --------------------------------------------
+[0.8.9] - 2022-06-08
+
+* [Android] Fixes DataChannel issue described in #974
+* [iOS] Fixes DataChannel issue described in #974
+* [Dawrin/Android/Windows] Split data channel's webrtc id from our internal id (#961)
+* [Windows] Update to m97.
+* [Windows] Add PeerConnectionState
+* [Windows] Fix can't open mic alone when built-in AEC is enabled.
+
+[0.8.8] - 2022-05-31
+
+* [Android] Added onBufferedAmountChange callback which will return currentBuffer and changedBuffer and implemented bufferedAmount.
+* [Android] Added onBufferedAmountLow callback which will return currentBuffer ans will be called if bufferedAmountLowThreshold is set a value.
+
+[0.8.7] - 2022-05-18
+
+* [iOS/macOS] fix: Use RTCYUVHelper instead of external libyuv library (#954).
+* [iOS/macOS] Flutter 3.0 crash fixes, setStreamHandler on main thread (#953)
+* [Android] Use mavenCentral() instead of jcenter() (#952)
+* [Windows] Use uint8_t* instead of string in DataChannel::Send method, fix binary send bug.
+* [Android] fix: "Reply already submitted" error and setVolume() not working on remote streams.
+
+[0.8.6] - 2022-05-08
+
+* [Web/Android/iOS/macOS] Support null tracks in replaceTrack/setTrack.
+* [macOS] Remove absolute path from resolved spec to make checksum stable.
+* [Android] Android 12 bluetooth permissions.
+* [Dart] fix wrong id type for data-channel.
+* [Android] Release i420 Buffer in FrameCapturer.
+
+[0.8.5] - 2022-04-01
+
+* [Dart] Expose RTCDataChannel.id (#898)
+* [Android] Enable H264 high profile for SimulcastVideoEncoderFactoryWrapper (#890)
+
 [0.8.4] - 2022-03-28
 
 * [Android] Fix simulcast factory not sending back EncoderInfo (#891)
