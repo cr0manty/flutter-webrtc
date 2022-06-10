@@ -29,6 +29,7 @@
     id _messenger;
     id _textures;
     BOOL _speakerOn;
+    BOOL _useExternalMic;
 }
 
 @synthesize messenger = _messenger;
@@ -70,6 +71,7 @@
         _textures = textures;
         _messenger = messenger;
         _speakerOn = NO;
+        _useExternalMic = YES;
         
         _whiteBalanceHelper = [WhiteBalanceHelper new];
         _zoomHelper = [CameraLensAndZoomHelper new];
@@ -84,18 +86,18 @@
     self.localStreams = [NSMutableDictionary new];
     self.localTracks = [NSMutableDictionary new];
     self.renders = [[NSMutableDictionary alloc] init];
-#if TARGET_OS_IPHONE
-    AVAudioSession *session = [AVAudioSession sharedInstance];
-    [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
-#endif
+
     return self;
 }
 
 
 -(void)ensureInitialized:(BOOL)bypassVoiceProcessing {
     //RTCSetMinDebugLogLevel(RTCLoggingSeverityVerbose);
+    if (_useExternalMic) {
+        AVAudioSession *session = [AVAudioSession sharedInstance];
+            [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers error:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didSessionRouteChange:) name:AVAudioSessionRouteChangeNotification object:session];
+        }
     if (!_peerConnectionFactory) {
         RTCDefaultVideoDecoderFactory *decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
         RTCDefaultVideoEncoderFactory *encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
@@ -134,7 +136,7 @@
              break;
          case AVAudioSessionRouteChangeReasonCategoryChange: {
              AVAudioSession *session = [AVAudioSession sharedInstance];
-             if ([session category] != AVAudioSessionCategoryMultiRoute) {
+             if (_useExternalMic && [session category] != AVAudioSessionCategoryMultiRoute) {
                 NSError* setCategoryError;
                 [session setCategory:AVAudioSessionCategoryMultiRoute withOptions: AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers
                            error:&setCategoryError];
@@ -445,6 +447,11 @@
         NSDictionary* argsMap = call.arguments;
         NSDictionary* options = argsMap[@"options"];
         BOOL enableBypassVoiceProcessing = NO;
+        
+        if(options[@"useExternalMic"] != nil){
+          _useExternalMic = ((NSNumber*)options[@"useExternalMic"]).boolValue;
+       }
+        
         if(options[@"bypassVoiceProcessing"] != nil){
             enableBypassVoiceProcessing = ((NSNumber*)options[@"bypassVoiceProcessing"]).boolValue;
         }

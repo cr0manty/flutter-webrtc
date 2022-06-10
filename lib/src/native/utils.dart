@@ -44,12 +44,18 @@ class WebRTC {
 
   static bool _initialized = false;
 
-  static Future<void> initialize({Map<String, dynamic>? options}) async {
+  static Future<void> initialize({
+    bool bypassVoiceProcessing = false,
+    bool useExternalMic = false,
+  }) async {
     if (!_initialized) {
       await _channel.invokeMethod<void>(
         'initialize',
         <String, dynamic>{
-          'options': options ?? {},
+          'options': {
+            'bypassVoiceProcessing': bypassVoiceProcessing,
+            'useExternalMic': useExternalMic,
+          },
         },
       );
       _initialized = true;
