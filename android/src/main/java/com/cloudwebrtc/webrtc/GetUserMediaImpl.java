@@ -983,8 +983,10 @@ class GetUserMediaImpl {
         builder.set(CaptureRequest.SCALER_CROP_REGION, this.mCropRegion);
     }
 
-    public void getDeviceId(Result result) {
-        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP && info.capturer instanceof Camera2Capturer) {
+    public void getDeviceId(String trackId, Result result) {
+        VideoCapturerInfo info = mVideoCapturers.get(trackId);
+
+        if (info.capturer instanceof Camera2Capturer) {
             CameraDevice cameraDevice;
 
             try {
@@ -1000,9 +1002,10 @@ class GetUserMediaImpl {
             } catch (NoSuchFieldWithNameException e) {
                 // Most likely the upstream Camera2Capturer class have changed
                 resultError("getDeviceId", "[getDeviceId] Failed to get `" + e.fieldName + "` from `" + e.className + "`", result);
-                return;
             }
+        }
 
+        resultError("getDeviceId", "[getDeviceId] Failed to get `deviceId`", result);
     }
 
     public void changeZoom(String trackId, double zoom, Result result) {

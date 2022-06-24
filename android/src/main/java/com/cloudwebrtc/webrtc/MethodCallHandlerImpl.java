@@ -213,7 +213,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       case "getSources":
         getSources(result);
         break;
-      case "#VideoHelper/changeZoom":
+      case "setCameraZoom":
         String cameraTrackID = call.argument("trackId");
         double zoom = call.argument("zoom");
         getUserMediaImpl.changeZoom(cameraTrackID, zoom, result);
@@ -454,7 +454,8 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         break;
       }
       case "getCurrentDeviceId": {
-        getUserMediaImpl.getDeviceId(result);
+        String trackId = call.argument("trackId");
+        getUserMediaImpl.getDeviceId(trackId, result);
         break;
       }
       case "videoRendererSetSrcObject": {

@@ -38,4 +38,6 @@
 
 -(AVCaptureDevice *)getCameraWithPosition:(AVCaptureDevicePosition)position;
 
+-(void)mediaStreamChangeZoom:(CGFloat)zoom result:(FlutterResult)result;
+
 @end

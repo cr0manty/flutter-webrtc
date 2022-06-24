@@ -184,7 +184,23 @@ class Helper {
     return result ?? false;
   }
 
-  static Future<String?> get currentDeviceId => WebRTC.invokeMethod<String>(
-        'getCurrentDeviceId',
-      );
+  static Future<String?> currentDeviceId(
+    String? trackId,
+  ) =>
+      WebRTC.invokeMethod<String>('getCurrentDeviceId', {
+        'trackId': trackId,
+      });
+
+  static Future<bool> setZoom(
+    double zoom,
+    String? trackId,
+  ) async {
+    final result = await WebRTC.invokeMethod<bool>('setCameraZoom', {
+      'trackId': trackId,
+      'zoom': zoom,
+    }) ;
+
+    return result ?? false;
+  }
+
 }

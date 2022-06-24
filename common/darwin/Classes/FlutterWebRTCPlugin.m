@@ -214,6 +214,11 @@
 #else
         result(FlutterMethodNotImplemented);
 #endif
+    } else if ([@"setCameraZoom" isEqualToString:call.method]) {
+        NSDictionary* argsMap = call.arguments;
+        NSNumber* zoom = argsMap[@"zoom"];
+        
+        [self mediaStreamChangeZoom:[zoom floatValue] result:result];
     } else if ([@"setCustomCameraDevice" isEqualToString:call.method]) {
         NSDictionary* argsMap = call.arguments;
         NSString* uniqueID = argsMap[@"uniqueID"];
