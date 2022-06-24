@@ -453,6 +453,10 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         result.success(null);
         break;
       }
+      case "getCurrentDeviceId": {
+        getUserMediaImpl.getDeviceId(result);
+        break;
+      }
       case "videoRendererSetSrcObject": {
         int textureId = call.argument("textureId");
         String streamId = call.argument("streamId");
