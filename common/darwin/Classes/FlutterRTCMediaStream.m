@@ -700,21 +700,37 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
 -(void)mediaStreamChangeZoom:(CGFloat)zoom result:(FlutterResult)result
 {
     if (!self.videoCapturer) {
-        NSLog(@"Video capturer is null. Can't change focus");
+        NSLog(@"Video capturer is null. Can't change zoom");
         return;
     }
-    self._usingFrontCamera = !self._usingFrontCamera;
-    AVCaptureDevicePosition position = self._usingFrontCamera ? AVCaptureDevicePositionFront : AVCaptureDevicePositionBack;
-    [self setVideoDevice: [self getCameraWithPosition:position]];
-    AVCaptureDeviceFormat *selectedFormat = [self selectFormatForDevice:_videoDevice];
-    [self.videoCapturer startCaptureWithDevice:_videoDevice format:selectedFormat fps:[self selectFpsForFormat:selectedFormat] completionHandler:^(NSError* error){
-        if (error != nil) {
-            result([FlutterError errorWithCode:@"Error while switching camera" message:@"Error while switching camera" details:error]);
-        } else {
-            [self.videoCapturer setCameraPosition: position];
-            result([NSNumber numberWithBool:self._usingFrontCamera]);
+    
+    if (@available(iOS 11.0, *)) {
+        float maxZoom = [_videoDevice maxAvailableVideoZoomFactor];
+        float minZoom = [_videoDevice minAvailableVideoZoomFactor];
+        
+        if (maxZoom < zoom || zoom < minZoom) {
+            return result([FlutterError errorWithCode:@"Set Zoom exception"
+                                       message:[NSString stringWithFormat:@"Your zoom is not in available zoom range, %f>%f>%f", minZoom, zoom, maxZoom]
+                                       details:nil]);
         }
-    }];
+    } else {
+        return result([FlutterError errorWithCode:@"Set Zoom exception"
+                                   message:[NSString stringWithFormat:@"Zoom factor is not supported"]
+                                   details:nil]);
+    }
+
+    NSError *error;
+    if([_videoDevice lockForConfiguration:&error]) {
+        [_videoDevice setVideoZoomFactor:zoom];
+        [_videoDevice unlockForConfiguration];
+        return result(@YES);
+    }
+
+    if (error) {
+        return result([FlutterError errorWithCode:@"Set Zoom exception"
+                            message:[NSString stringWithFormat:@"%@", error]
+                            details:nil]);
+    }
 }
 
 -(void)mediaStreamTrackCaptureFrame:(RTCVideoTrack *)track toPath:(NSString *) path result:(FlutterResult)result
